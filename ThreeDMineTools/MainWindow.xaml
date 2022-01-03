@@ -7,33 +7,47 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Viewport3D>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"></RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <Button Click="OpenModel">open</Button>
+            <Button Click="ConvertModel" x:Name="convertButton" IsEnabled="False">Convert</Button>
+            <Button Click="WriteSchematics" x:Name="writeButton" IsEnabled="False">write</Button>
+        </StackPanel>
+        <Canvas Grid.Column="2" Grid.Row="0" x:Name="cnv" Visibility="Hidden"/>
+        <TextBlock Grid.Column="2" Grid.Row="1" x:Name="heightTB"/>
+        <TextBlock Text="Высота:" Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,5,0"/>
+        <Viewport3D Grid.Column="1" Grid.Row="0" >
             <Viewport3D.Camera>
-                <!--Установка камеры - перспективная проекция-->
-                <PerspectiveCamera Position="0,0,2" LookDirection="0,0,-2" />
+                <PerspectiveCamera x:Name="Camera" Position="2,0,41" LookDirection="0.2,0.4,-1" FieldOfView="65"/>
             </Viewport3D.Camera>
             <Viewport3D.Children>
                 <ModelVisual3D>
                     <ModelVisual3D.Content>
-                        <!--Установка освещения - прямой свет-->
                         <DirectionalLight Color="White" Direction="-1,-1,-2" />
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
                 <ModelVisual3D>
                     <ModelVisual3D.Content>
                         <GeometryModel3D>
-                            <!--Определяем геометрию объекта-->
                             <GeometryModel3D.Geometry>
-                                <MeshGeometry3D Positions="-0.5,0,0 0,0.5,0 0.5,0,0" TriangleIndices="0, 2,1" />
+                                <MeshGeometry3D x:Name="Model3D"/>
                             </GeometryModel3D.Geometry>
-                            <!--Установка материала - красный цвет-->
                             <GeometryModel3D.Material>
-                                <DiffuseMaterial Brush="Red" />
+                                <DiffuseMaterial Brush="#3B457D" />
                             </GeometryModel3D.Material>
                         </GeometryModel3D>
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
             </Viewport3D.Children>
         </Viewport3D>
+        <Slider Grid.Column="1" Grid.Row="1" x:Name="scale" IsEnabled="False" ValueChanged="scaleChange"></Slider>
     </Grid>
 </Window>
