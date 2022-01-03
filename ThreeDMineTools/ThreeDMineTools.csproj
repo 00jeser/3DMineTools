@@ -17,9 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="jni4net.n-0.8.8.0">
-      <HintPath>C:\Users\00jes\Downloads\jni4net-0.8.8.0-bin\lib\jni4net.n-0.8.8.0.dll</HintPath>
-    </Reference>
     <Reference Include="Substrate">
       <HintPath>C:\Users\00jes\source\repos\Substrate\Substrate\bin\Debug\net6.0\Substrate.dll</HintPath>
     </Reference>
