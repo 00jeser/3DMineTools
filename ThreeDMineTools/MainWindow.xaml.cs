@@ -62,16 +62,21 @@ namespace ThreeDMineTools
 
         private float XMax = float.MinValue, YMax = float.MinValue, ZMax = float.MinValue, XMin = float.MaxValue, YMin = float.MaxValue, ZMin = float.MaxValue;
 
-        private void OpenModel(object sender, RoutedEventArgs e)
+        private async void OpenModel(object sender, RoutedEventArgs e)
         {
+            StatusTB.Text = "opening...";
             OpenFileDialog openFileDialog = new();
             openFileDialog.Filter = "obj|*.obj";
             openFileDialog.ShowDialog();
 
-            if(openFileDialog.FileName.IsNullOrEmpty())
+            if (openFileDialog.FileName.IsNullOrEmpty())
                 return;
 
-            File.Copy(openFileDialog.FileName.Replace(".obj", ".mtl"), openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl"));
+            if (!File.Exists(openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl")))
+                File.Copy(openFileDialog.FileName.Replace(".obj", ".mtl"), openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl"));
+
+            progress.Value = 0.1;
+            await Task.Delay(1);
 
             ObjLoaderFactory objLoaderFactory = new ObjLoaderFactory();
             IObjLoader? objLoader = objLoaderFactory.Create();
@@ -79,6 +84,8 @@ namespace ThreeDMineTools
             LoadResult? result = objLoader.Load(fileStream);
             fileStream.Close();
 
+            progress.Value = 0.2;
+            await Task.Delay(1);
 
             Model3D.Positions.Clear();
             Model3D.TriangleIndices.Clear();
@@ -95,7 +102,11 @@ namespace ThreeDMineTools
                 Model3D.Positions.Add(new Point3D(p.X, p.Y, p.Z));
             }
 
-            scale.Minimum = 1 / (YMax - YMin);
+
+            progress.Value = 0.4;
+            await Task.Delay(1);
+
+            scale.Minimum = 10 / (YMax - YMin);
             scale.Maximum = 250 / (YMax - YMin);
             scale.Value = 1;
             scale.IsEnabled = true;
@@ -182,9 +193,9 @@ namespace ThreeDMineTools
                             Stroke = new SolidColorBrush(Color.FromRgb(206, 148, 0)),
                             Points = new PointCollection()
                             {
-                                new System.Windows.Point(uvp1.X, uvp1.Y),
-                                new System.Windows.Point(uvp2.X, uvp3.Y),
-                                new System.Windows.Point(uvp3.X, uvp2.Y),
+                                new(uvp1.X, uvp1.Y),
+                                new(uvp2.X, uvp3.Y),
+                                new(uvp3.X, uvp2.Y),
                             },
                             StrokeThickness = 1,
                             Fill = new SolidColorBrush(Color.FromArgb(76, 206, 148, 0))
@@ -210,6 +221,9 @@ namespace ThreeDMineTools
                 }
             }
 
+            progress.Value = 0.8;
+            await Task.Delay(1);
+
             model = new MModel()
             {
                 Polygons = polygons.ToArray(),
@@ -222,6 +236,14 @@ namespace ThreeDMineTools
             };
             convertButton.IsEnabled = true;
             File.Delete(openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl"));
+
+            ModelPreviewCamera.Position = new Point3D(0, (YMax + YMin) / 2, max(XMax - XMin, YMax - YMin, ZMax - ZMin) * 2);
+            VoxelsPreviewCamera.Position = new Point3D(0, (YMax + YMin) / 2, max(XMax - XMin, YMax - YMin, ZMax - ZMin) * 2);
+            ModelPreviewCamera.LookDirection = new Vector3D((XMax + XMin) / 2 - ModelPreviewCamera.Position.X, (YMax + YMin) / 2 - ModelPreviewCamera.Position.Y, (ZMax + ZMin) / 2 - ModelPreviewCamera.Position.Z);
+            VoxelsPreviewCamera.LookDirection = new Vector3D((XMax + XMin) / 2 - ModelPreviewCamera.Position.X, (YMax + YMin) / 2 - ModelPreviewCamera.Position.Y, (ZMax + ZMin) / 2 - ModelPreviewCamera.Position.Z);
+
+            progress.Value = 1;
+            StatusTB.Text = "opened";
         }
 
         private MModel model;
@@ -274,36 +296,75 @@ namespace ThreeDMineTools
             tree.WriteTo(file);
             file.Close();
 
+            StatusTB.Text = "Written";
+
         }
 
-        private void ConvertModel(object sender, RoutedEventArgs e)
+        private async void ConvertModel(object sender, RoutedEventArgs e)
         {
+            MModel newModel = new();
+            newModel.YMin = model.YMin * (float)scale.Value;
+            newModel.XMin = model.XMin * (float)scale.Value;
+            newModel.ZMin = model.ZMin * (float)scale.Value;
+            newModel.YMax = model.YMax * (float)scale.Value;
+            newModel.XMax = model.XMax * (float)scale.Value;
+            newModel.ZMax = model.ZMax * (float)scale.Value;
+            newModel.Polygons = new MPolygon[model.Polygons.Length];
+
+
+            StatusTB.Text = "converting...";
             for (int i = 0; i < model.Polygons.Length; i++)
             {
-                model.Polygons[i].Point1.X *= (float)scale.Value;
-                model.Polygons[i].Point1.Y *= (float)scale.Value;
-                model.Polygons[i].Point1.Z *= (float)scale.Value;
-                model.Polygons[i].Point2.X *= (float)scale.Value;
-                model.Polygons[i].Point2.Y *= (float)scale.Value;
-                model.Polygons[i].Point2.Z *= (float)scale.Value;
-                model.Polygons[i].Point3.X *= (float)scale.Value;
-                model.Polygons[i].Point3.Y *= (float)scale.Value;
-                model.Polygons[i].Point3.Z *= (float)scale.Value;
+                newModel.Polygons[i] = new MPolygon()
+                {
+                    Point1 = new MPoint(model.Polygons[i].Point1.X * (float)scale.Value, model.Polygons[i].Point1.Y * (float)scale.Value, model.Polygons[i].Point1.Z * (float)scale.Value),
+                    Point2 = new MPoint(model.Polygons[i].Point2.X * (float)scale.Value, model.Polygons[i].Point2.Y * (float)scale.Value, model.Polygons[i].Point2.Z * (float)scale.Value),
+                    Point3 = new MPoint(model.Polygons[i].Point3.X * (float)scale.Value, model.Polygons[i].Point3.Y * (float)scale.Value, model.Polygons[i].Point3.Z * (float)scale.Value),
+                };
             }
-            model.XMin *= (float)scale.Value;
-            model.YMin *= (float)scale.Value;
-            model.ZMin *= (float)scale.Value;
-            model.XMax *= (float)scale.Value;
-            model.YMax *= (float)scale.Value;
-            model.ZMax *= (float)scale.Value;
-            vertex = ModelConverter.PolygonToVoxel3(model);
+
+            convertButton.IsEnabled = false;
+            var t = new Task(AlghoType.SelectedIndex switch
+            {
+                0 => () => vertex = ModelConverter.PolygonToVoxel(newModel),
+                1 => () => vertex = ModelConverter.PolygonToVoxel2(newModel),
+                2 => () => vertex = ModelConverter.PolygonToVoxel3(newModel)
+            }
+            );
+            t.Start();
+            while (!t.IsCompleted)
+            {
+                await Task.Delay(100);
+                progress.Value = ModelConverter.progress;
+                StatusTB.Text = $"converting...({(int)(ModelConverter.progress * 100)}%)";
+            }
             writeButton.IsEnabled = true;
+            convertButton.IsEnabled = true;
+            StatusTB.Text = "converted";
+
+            (VoxelMesh.Positions, VoxelMesh.TriangleIndices) = ModelConverter.VoxelToPolygon(vertex);
+            VoxelsPreviewCamera.Position = new Point3D(
+                vertex.Count / 2,
+                vertex[0].Count / 2,
+                max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2
+            );
         }
 
         private void scaleChange(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-
             heightTB.Text = ((YMax - YMin) * scale.Value).ToString();
+        }
+
+        private float rotation = 0;
+        private double lastX = 0;
+        private void UIElement_OnMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                rotation += (float)lastX - (float)e.GetPosition(sender as Viewport3D).X;
+                VoxelModelRotation.Angle = rotation;
+            }
+                lastX = e.GetPosition(sender as Viewport3D).X;
         }
     }
 }

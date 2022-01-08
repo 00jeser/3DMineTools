@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ThreeDMineTools"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="3DMineTools" WindowState="Maximized">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100"/>
@@ -14,19 +14,61 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="30"></RowDefinition>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <StackPanel>
             <Button Click="OpenModel">open</Button>
+            <Grid Width="0" Height="10"/>
+            <ComboBox x:Name="AlghoType" SelectedIndex="2">
+                <TextBlock Text="1"/>
+                <TextBlock Text="2"/>
+                <TextBlock Text="3"/>
+            </ComboBox>
             <Button Click="ConvertModel" x:Name="convertButton" IsEnabled="False">Convert</Button>
+            <Grid Width="0" Height="10"/>
             <Button Click="WriteSchematics" x:Name="writeButton" IsEnabled="False">write</Button>
         </StackPanel>
-        <Canvas Grid.Column="2" Grid.Row="0" x:Name="cnv" Visibility="Hidden"/>
         <TextBlock Grid.Column="2" Grid.Row="1" x:Name="heightTB"/>
-        <TextBlock Text="Высота:" Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,5,0"/>
-        <Viewport3D Grid.Column="1" Grid.Row="0" >
+        <TextBlock Text="Height:" Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,5,0"/>
+        <Viewport3D Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Viewport3D.Camera>
-                <PerspectiveCamera x:Name="Camera" Position="2,0,41" LookDirection="0.2,0.4,-1" FieldOfView="65"/>
+                <PerspectiveCamera x:Name="VoxelsPreviewCamera" Position="2,0,241" LookDirection="00,00,-1" FieldOfView="90"/>
+            </Viewport3D.Camera>
+            <Viewport3D.Children>
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <DirectionalLight Color="White" Direction="-1,-1,-2" />
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+                <ModelVisual3D x:Name="VoxelModel">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D x:Name="VoxelMesh"/>
+                            </GeometryModel3D.Geometry>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="#7D3B3D" />
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.BackMaterial>
+                                <DiffuseMaterial Brush="#7D3B3D" />
+                            </GeometryModel3D.BackMaterial>
+                            <GeometryModel3D.Transform>
+                                <RotateTransform3D>
+                                    <RotateTransform3D.Rotation>
+                                        <AxisAngleRotation3D x:Name="VoxelModelRotation" Axis="0,1,0" Angle="0"/>
+                                    </RotateTransform3D.Rotation>
+                                </RotateTransform3D>
+                            </GeometryModel3D.Transform>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D.Children>
+        </Viewport3D>
+        <Grid x:Name="GridToRotate" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" MouseMove="UIElement_OnMouseMove"/>
+        <Viewport3D Grid.Column="1" Grid.Row="0" Width="300" Height="300" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Viewport3D.Camera>
+                <PerspectiveCamera x:Name="ModelPreviewCamera" Position="2,0,41" LookDirection="0.2,0.4,-1" FieldOfView="65"/>
             </Viewport3D.Camera>
             <Viewport3D.Children>
                 <ModelVisual3D>
@@ -48,6 +90,11 @@
                 </ModelVisual3D>
             </Viewport3D.Children>
         </Viewport3D>
+        <ScrollViewer Grid.Column="1" MaxWidth="300" MaxHeight="300" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Canvas Grid.Column="2" Grid.Row="0" x:Name="cnv"/>
+        </ScrollViewer>
         <Slider Grid.Column="1" Grid.Row="1" x:Name="scale" IsEnabled="False" ValueChanged="scaleChange"></Slider>
+        <ProgressBar Grid.Column="1" Grid.Row="2" x:Name="progress" Maximum="1"/>
+        <TextBlock Grid.Row="2" x:Name="StatusTB"/>
     </Grid>
 </Window>

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using ThreeDMineTools.Models;
 
@@ -12,8 +13,12 @@ public static class ModelConverter
 {
     [DllImport("IntersectionTool.dll", CallingConvention = CallingConvention.Cdecl)]
     public static extern int Intersection(MPoint voxel, MPoint Triangle1, MPoint Triangle2, MPoint Triangle3);
+
+    public static double progress = 0;
     public static List<List<List<Color?>>> PolygonToVoxel(MModel model)
     {
+        var MaxProgress = ((int)model.XMax + 1) - ((int)model.XMin - 1);
+        var CurentProgress = 0d;
         List<List<List<Color?>>> rez = new();
         for (int x = (int)model.XMin - 1; x <= (int)model.XMax + 1; x++)
         {
@@ -35,6 +40,9 @@ public static class ModelConverter
                     rez.Last().Last().Add(c);
                 }
             }
+
+            CurentProgress++;
+            progress = CurentProgress / MaxProgress;
         }
 
         return rez;
@@ -99,41 +107,47 @@ public static class ModelConverter
 
     public static List<List<List<Color?>>> PolygonToVoxel3(MModel model)
     {
-        List<List<List<List<Color>>>> rezs = new(20);
+        List<List<List<List<Color>>>> rezs = new((int)(model.XMax - model.XMin));
         var dX = (int)model.XMin - 1;
         var dY = (int)model.YMin - 1;
         var dZ = (int)model.ZMin - 1;
         for (int x = (int)model.XMin - 1; x <= (int)model.XMax + 1; x++)
         {
-            rezs.Add(new List<List<List<Color>>>(20));
+            rezs.Add(new List<List<List<Color>>>((int)(model.YMax - model.YMin)));
             for (int y = (int)model.YMin - 1; y <= (int)model.YMax + 1; y++)
             {
-                rezs.Last().Add(new List<List<Color>>(20));
+                rezs.Last().Add(new List<List<Color>>((int)(model.ZMax - model.ZMin)));
                 for (int z = (int)model.ZMin - 1; z <= (int)model.ZMax + 1; z++)
                 {
                     rezs.Last().Last().Add(new List<Color>(5));
                 }
             }
+
+            progress = 1 + (x + model.XMin - 1) / (model.XMax - model.XMin + 1);
         }
 
+        int n = 0;
         foreach (var poly in model.Polygons)
         {
-            var xmax = (int) max(poly.Point1.X, poly.Point2.X, poly.Point3.X);
-            for (int x = (int) min(poly.Point1.X, poly.Point2.X, poly.Point3.X); x <= xmax; x++)
+            var xmax = (int)max(poly.Point1.X, poly.Point2.X, poly.Point3.X);
+            for (int x = (int)min(poly.Point1.X, poly.Point2.X, poly.Point3.X); x <= xmax; x++)
             {
-                var ymax = (int) max(poly.Point1.Y, poly.Point2.Y, poly.Point3.Y);
+                var ymax = (int)max(poly.Point1.Y, poly.Point2.Y, poly.Point3.Y);
 
-                for (int y = (int) min(poly.Point1.Y, poly.Point2.Y, poly.Point3.Y); y <= ymax; y++)
+                for (int y = (int)min(poly.Point1.Y, poly.Point2.Y, poly.Point3.Y); y <= ymax; y++)
                 {
 
                     var zmax = (int)max(poly.Point1.Z, poly.Point2.Z, poly.Point3.Z);
 
                     for (int z = (int)min(poly.Point1.Z, poly.Point2.Z, poly.Point3.Z); z <= zmax; z++)
                     {
-                        rezs[x-dX][y-dY][z-dZ].Add(poly.AverageColor);
+                        rezs[x - dX][y - dY][z - dZ].Add(poly.AverageColor);
                     }
                 }
             }
+
+            progress = n / model.Polygons.Length;
+            n++;
         }
         List<List<List<Color?>>> rez = new();
         for (int x = 0; x < rezs.Count; x++)
@@ -184,4 +198,80 @@ public static class ModelConverter
 
         return Color.FromRgb((byte)(r / clrs.Count), (byte)(g / clrs.Count), (byte)(b / clrs.Count));
     }
+
+    public static (Point3DCollection, Int32Collection) VoxelToPolygon(List<List<List<Color?>>> vertex)
+    {
+        Point3DCollection vertexes = new Point3DCollection(vertex.Count * vertex[0].Count * vertex[0][0].Count * 8);
+        Int32Collection triangles = new Int32Collection(vertex.Count * vertex[0].Count * vertex[0][0].Count * 12 * 3);
+        for (int x = 0; x < vertex.Count; x++)
+        {
+            for (int y = 0; y < vertex[0].Count; y++)
+            {
+                for (int z = 0; z < vertex[0][0].Count; z++)
+                {
+                    if (vertex[x][y][z] == null)
+                        continue;
+                    vertexes.Add(new Point3D(x - 0.5, y - 0.5, z - 0.5));
+                    vertexes.Add(new Point3D(x + 0.5, y - 0.5, z - 0.5));
+                    vertexes.Add(new Point3D(x - 0.5, y - 0.5, z + 0.5));
+                    vertexes.Add(new Point3D(x + 0.5, y - 0.5, z + 0.5));
+                    vertexes.Add(new Point3D(x - 0.5, y + 0.5, z - 0.5));
+                    vertexes.Add(new Point3D(x + 0.5, y + 0.5, z - 0.5));
+                    vertexes.Add(new Point3D(x - 0.5, y + 0.5, z + 0.5));
+                    vertexes.Add(new Point3D(x + 0.5, y + 0.5, z + 0.5));
+
+
+                    triangles.Add(vertexes.Count - 7 - 1);
+                    triangles.Add(vertexes.Count - 6 - 1);
+                    triangles.Add(vertexes.Count - 5 - 1);
+
+                    triangles.Add(vertexes.Count - 4 - 1);
+                    triangles.Add(vertexes.Count - 6 - 1);
+                    triangles.Add(vertexes.Count - 5 - 1);
+
+                    triangles.Add(vertexes.Count - 3 - 1);
+                    triangles.Add(vertexes.Count - 1 - 1);
+                    triangles.Add(vertexes.Count - 2 - 1);
+
+                    triangles.Add(vertexes.Count - 1 - 1);
+                    triangles.Add(vertexes.Count - 2 - 1);
+                    triangles.Add(vertexes.Count - 1);
+
+                    triangles.Add(vertexes.Count - 7 - 1);
+                    triangles.Add(vertexes.Count - 3 - 1);
+                    triangles.Add(vertexes.Count - 6 - 1);
+
+                    triangles.Add(vertexes.Count - 2 - 1);
+                    triangles.Add(vertexes.Count - 3 - 1);
+                    triangles.Add(vertexes.Count - 6 - 1);
+
+                    triangles.Add(vertexes.Count - 5 - 1);
+                    triangles.Add(vertexes.Count - 1 - 1);
+                    triangles.Add(vertexes.Count - 4 - 1);
+
+                    triangles.Add(vertexes.Count - 1 - 1);
+                    triangles.Add(vertexes.Count - 4 - 1);
+                    triangles.Add(vertexes.Count - 1);
+
+                    triangles.Add(vertexes.Count - 7 - 1);
+                    triangles.Add(vertexes.Count - 5 - 1);
+                    triangles.Add(vertexes.Count - 3 - 1);
+
+                    triangles.Add(vertexes.Count - 1 - 1);
+                    triangles.Add(vertexes.Count - 5 - 1);
+                    triangles.Add(vertexes.Count - 3 - 1);
+
+                    triangles.Add(vertexes.Count - 6 - 1);
+                    triangles.Add(vertexes.Count - 4 - 1);
+                    triangles.Add(vertexes.Count - 2 - 1);
+
+                    triangles.Add(vertexes.Count - 1);
+                    triangles.Add(vertexes.Count - 4 - 1);
+                    triangles.Add(vertexes.Count - 2 - 1);
+                }
+            }
+        }
+        return (vertexes, triangles);
+    }
+
 }
