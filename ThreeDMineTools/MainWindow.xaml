@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ThreeDMineTools"
         mc:Ignorable="d"
-        Title="3DMineTools" WindowState="Maximized">
+        Title="3DMineTools"
+        WindowState="Maximized"
+        Icon="./Resources/logo.ico">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100"/>
@@ -48,10 +50,10 @@
                                 <MeshGeometry3D x:Name="VoxelMesh"/>
                             </GeometryModel3D.Geometry>
                             <GeometryModel3D.Material>
-                                <DiffuseMaterial Brush="#7D3B3D" />
+                                <DiffuseMaterial Brush="#97C0FE" />
                             </GeometryModel3D.Material>
                             <GeometryModel3D.BackMaterial>
-                                <DiffuseMaterial Brush="#7D3B3D" />
+                                <DiffuseMaterial Brush="#97C0FE" />
                             </GeometryModel3D.BackMaterial>
                             <GeometryModel3D.Transform>
                                 <RotateTransform3D>
