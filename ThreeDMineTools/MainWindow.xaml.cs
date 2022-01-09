@@ -348,6 +348,8 @@ namespace ThreeDMineTools
                 vertex[0].Count / 2,
                 max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2
             );
+            rotation = 0;
+            VoxelModelRotation.Angle = 0;
         }
 
         private void scaleChange(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -364,7 +366,7 @@ namespace ThreeDMineTools
                 rotation += (float)lastX - (float)e.GetPosition(sender as Viewport3D).X;
                 VoxelModelRotation.Angle = rotation;
             }
-                lastX = e.GetPosition(sender as Viewport3D).X;
+            lastX = e.GetPosition(sender as Viewport3D).X;
         }
     }
 }
