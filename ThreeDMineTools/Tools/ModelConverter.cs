@@ -199,10 +199,10 @@ public static class ModelConverter
         return Color.FromRgb((byte)(r / clrs.Count), (byte)(g / clrs.Count), (byte)(b / clrs.Count));
     }
 
-    public static (Point3DCollection, Int32Collection) VoxelToPolygon(List<List<List<Color?>>> vertex)
+    public static List<(Point3DCollection, Int32Collection, Color)> VoxelToPolygon(List<List<List<Color?>>> vertex)
     {
-        Point3DCollection vertexes = new Point3DCollection(vertex.Count * vertex[0].Count * vertex[0][0].Count * 8);
-        Int32Collection triangles = new Int32Collection(vertex.Count * vertex[0].Count * vertex[0][0].Count * 12 * 3);
+        Dictionary<Color, List<Point3D>> vertexes = new Dictionary<Color, List<Point3D>>();
+        Dictionary<Color, List<int>> triangles = new Dictionary<Color, List<int>>();
         for (int x = 0; x < vertex.Count; x++)
         {
             for (int y = 0; y < vertex[0].Count; y++)
@@ -211,67 +211,83 @@ public static class ModelConverter
                 {
                     if (vertex[x][y][z] == null)
                         continue;
-                    vertexes.Add(new Point3D(x - 0.5, y - 0.5, z - 0.5));
-                    vertexes.Add(new Point3D(x + 0.5, y - 0.5, z - 0.5));
-                    vertexes.Add(new Point3D(x - 0.5, y - 0.5, z + 0.5));
-                    vertexes.Add(new Point3D(x + 0.5, y - 0.5, z + 0.5));
-                    vertexes.Add(new Point3D(x - 0.5, y + 0.5, z - 0.5));
-                    vertexes.Add(new Point3D(x + 0.5, y + 0.5, z - 0.5));
-                    vertexes.Add(new Point3D(x - 0.5, y + 0.5, z + 0.5));
-                    vertexes.Add(new Point3D(x + 0.5, y + 0.5, z + 0.5));
+                    var NNcolor = vertex[x][y][z] ?? new Color();
+                    if (!vertexes.Keys.Contains(NNcolor))
+                    {
+                        vertexes[NNcolor] = new List<Point3D>();
+                        triangles[NNcolor] = new List<int>();
+                    }
+                    vertexes[NNcolor].Add(new Point3D(x - 0.5, y - 0.5, z - 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x + 0.5, y - 0.5, z - 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x - 0.5, y - 0.5, z + 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x + 0.5, y - 0.5, z + 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x - 0.5, y + 0.5, z - 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x + 0.5, y + 0.5, z - 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x - 0.5, y + 0.5, z + 0.5));
+                    vertexes[NNcolor].Add(new Point3D(x + 0.5, y + 0.5, z + 0.5));
 
 
-                    triangles.Add(vertexes.Count - 7 - 1);
-                    triangles.Add(vertexes.Count - 6 - 1);
-                    triangles.Add(vertexes.Count - 5 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 7 - 1);//0
+                    triangles[NNcolor].Add(vertexes.Count - 6 - 1);//1
+                    triangles[NNcolor].Add(vertexes.Count - 5 - 1);//2
 
-                    triangles.Add(vertexes.Count - 4 - 1);
-                    triangles.Add(vertexes.Count - 6 - 1);
-                    triangles.Add(vertexes.Count - 5 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 4 - 1);//3
+                    triangles[NNcolor].Add(vertexes.Count - 6 - 1);//1
+                    triangles[NNcolor].Add(vertexes.Count - 5 - 1);//2
 
-                    triangles.Add(vertexes.Count - 3 - 1);
-                    triangles.Add(vertexes.Count - 1 - 1);
-                    triangles.Add(vertexes.Count - 2 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 3 - 1);//4
+                    triangles[NNcolor].Add(vertexes.Count - 1 - 1);//6
+                    triangles[NNcolor].Add(vertexes.Count - 2 - 1);//5
 
-                    triangles.Add(vertexes.Count - 1 - 1);
-                    triangles.Add(vertexes.Count - 2 - 1);
-                    triangles.Add(vertexes.Count - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 1 - 1);//6
+                    triangles[NNcolor].Add(vertexes.Count - 2 - 1);//5
+                    triangles[NNcolor].Add(vertexes.Count - 1);//7
 
-                    triangles.Add(vertexes.Count - 7 - 1);
-                    triangles.Add(vertexes.Count - 3 - 1);
-                    triangles.Add(vertexes.Count - 6 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 7 - 1);//0
+                    triangles[NNcolor].Add(vertexes.Count - 3 - 1);//4
+                    triangles[NNcolor].Add(vertexes.Count - 6 - 1);//1
 
-                    triangles.Add(vertexes.Count - 2 - 1);
-                    triangles.Add(vertexes.Count - 3 - 1);
-                    triangles.Add(vertexes.Count - 6 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 2 - 1);//5
+                    triangles[NNcolor].Add(vertexes.Count - 3 - 1);//4
+                    triangles[NNcolor].Add(vertexes.Count - 6 - 1);//1
 
-                    triangles.Add(vertexes.Count - 5 - 1);
-                    triangles.Add(vertexes.Count - 1 - 1);
-                    triangles.Add(vertexes.Count - 4 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 5 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 1 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 4 - 1);
 
-                    triangles.Add(vertexes.Count - 1 - 1);
-                    triangles.Add(vertexes.Count - 4 - 1);
-                    triangles.Add(vertexes.Count - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 1 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 4 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 1);
 
-                    triangles.Add(vertexes.Count - 7 - 1);
-                    triangles.Add(vertexes.Count - 5 - 1);
-                    triangles.Add(vertexes.Count - 3 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 7 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 5 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 3 - 1);
 
-                    triangles.Add(vertexes.Count - 1 - 1);
-                    triangles.Add(vertexes.Count - 5 - 1);
-                    triangles.Add(vertexes.Count - 3 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 1 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 5 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 3 - 1);
 
-                    triangles.Add(vertexes.Count - 6 - 1);
-                    triangles.Add(vertexes.Count - 4 - 1);
-                    triangles.Add(vertexes.Count - 2 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 6 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 4 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 2 - 1);
 
-                    triangles.Add(vertexes.Count - 1);
-                    triangles.Add(vertexes.Count - 4 - 1);
-                    triangles.Add(vertexes.Count - 2 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 4 - 1);
+                    triangles[NNcolor].Add(vertexes.Count - 2 - 1);
                 }
             }
         }
-        return (vertexes, triangles);
+
+        List<(Point3DCollection, Int32Collection, Color)> rez = new List<(Point3DCollection, Int32Collection, Color)>();
+        foreach (var color in vertexes.Keys)
+        {
+            rez.Add((
+                new Point3DCollection(vertexes[color]),
+                new Int32Collection(triangles[color]),
+                color
+                ));
+        }
+        return rez;
     }
 
 }

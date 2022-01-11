@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HelixToolkit.Wpf;
 using Microsoft.Win32;
 using ObjLoader.Loader.Common;
 using ObjLoader.Loader.Data.Elements;
@@ -122,6 +123,8 @@ namespace ThreeDMineTools
                     bmp = (Bitmap)Image.FromFile(resultGroup.Material.DiffuseTextureMap);
                     cnv.Height = bmp.Height;
                     cnv.Width = bmp.Width;
+
+
                     cnv.Background = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bmp.GetHbitmap(),
                         IntPtr.Zero,
                         Int32Rect.Empty,
@@ -148,26 +151,6 @@ namespace ThreeDMineTools
                         uvp3 = new Texture(uvp3.X * bmp.Width, bmp.Height - uvp3.Y * bmp.Height);
 
                         System.Drawing.Color TmpCol;
-                        for (int x = (int)min(uvp1.Y, uvp2.Y, uvp3.Y); x < max(uvp1.X, uvp2.X, uvp3.X); x++)
-                        {
-                            for (int y = (int)min(uvp1.Y, uvp2.Y, uvp3.Y); y < max(uvp1.Y, uvp2.Y, uvp3.Y); y++)
-                            {
-                                //(x1 - x0) * (y2 - y1) - (x2 - x1) * (y1 - y0)
-                                //(x2 - x0) * (y3 - y2) - (x3 - x2) * (y2 - y0)
-                                //(x3 - x0) * (y1 - y3) - (x1 - x3) * (y3 - y0)
-                                var a = (uvp1.X - x) * (uvp2.Y - uvp1.Y) - (uvp2.X - uvp1.X) * (uvp1.Y - y);
-                                var b = (uvp2.X - x) * (uvp3.Y - uvp2.Y) - (uvp3.X - uvp2.X) * (uvp2.Y - y);
-                                var c = (uvp3.X - x) * (uvp1.Y - uvp3.Y) - (uvp1.X - uvp3.X) * (uvp3.Y - y);
-                                if ((a >= 0 && b >= 0 && c >= 0) || (a <= 0 && b <= 0 && c <= 0) || true)
-                                {
-                                    TmpCol = bmp.GetPixel(x, y);
-                                    avgR += TmpCol.R;
-                                    avgG += TmpCol.G;
-                                    avgB += TmpCol.B;
-                                    avgCount++;
-                                }
-                            }
-                        }
                         TmpCol = bmp.GetPixel((int)uvp1.X % bmp.Width, (int)uvp1.Y % bmp.Height);
                         avgR += TmpCol.R;
                         avgG += TmpCol.G;
@@ -190,7 +173,7 @@ namespace ThreeDMineTools
                         }
                         cnv.Children.Add(new Polygon()
                         {
-                            Stroke = new SolidColorBrush(Color.FromRgb(206, 148, 0)),
+                            Stroke = new SolidColorBrush(Color.FromArgb(153, 206, 148, 0)),
                             Points = new PointCollection()
                             {
                                 new(uvp1.X, uvp1.Y),
@@ -215,7 +198,6 @@ namespace ThreeDMineTools
                         Point3 = new MPoint(Model3D.Positions[face[2].VertexIndex - 1]),
                         AverageColor = Color.FromRgb((byte)(avgR), (byte)(avgG), (byte)(avgB))
                     };
-
 
                     polygons.Add(ppp);
                 }
@@ -320,6 +302,7 @@ namespace ThreeDMineTools
                     Point1 = new MPoint(model.Polygons[i].Point1.X * (float)scale.Value, model.Polygons[i].Point1.Y * (float)scale.Value, model.Polygons[i].Point1.Z * (float)scale.Value),
                     Point2 = new MPoint(model.Polygons[i].Point2.X * (float)scale.Value, model.Polygons[i].Point2.Y * (float)scale.Value, model.Polygons[i].Point2.Z * (float)scale.Value),
                     Point3 = new MPoint(model.Polygons[i].Point3.X * (float)scale.Value, model.Polygons[i].Point3.Y * (float)scale.Value, model.Polygons[i].Point3.Z * (float)scale.Value),
+                    AverageColor = model.Polygons[i].AverageColor
                 };
             }
 
@@ -342,14 +325,63 @@ namespace ThreeDMineTools
             convertButton.IsEnabled = true;
             StatusTB.Text = "converted";
 
-            (VoxelMesh.Positions, VoxelMesh.TriangleIndices) = ModelConverter.VoxelToPolygon(vertex);
+
+            var sun = VoxelViewport.Children[0];
+            VoxelViewport.Children.Clear();
+            VoxelViewport.Children.Add(sun);
+            //foreach (var model in ModelConverter.VoxelToPolygon(vertex))
+            //{
+            //    VoxelViewport.Children.Add(new ModelVisual3D()
+            //    {
+            //        Content = new GeometryModel3D()
+            //        {
+            //            Geometry = new MeshGeometry3D()
+            //            {
+            //                Positions = model.Item1,
+            //                TriangleIndices = model.Item2
+            //            },
+            //            Material = new DiffuseMaterial()
+            //            {
+            //                Brush = new SolidColorBrush(model.Item3)
+            //            },
+            //            BackMaterial = new DiffuseMaterial()
+            //            {
+            //                Brush = new SolidColorBrush(model.Item3)
+            //            }
+            //        }
+            //    });
+            //}
+
+            //---------------------preview--------------------------------------------
+            for (int x = 0; x < vertex.Count; x++)
+            {
+                progress.Value = x / vertex.Count;
+                await Task.Delay(1);
+                for (int y = 0; y < vertex[x].Count; y++)
+                {
+                    for (int z = 0; z < vertex[x][y].Count; z++)
+                    {
+                        if (vertex[x][y][z] != null)
+                        {
+                            VoxelViewport.Children.Add(new CubeVisual3D()
+                            {
+                                Center = new Point3D(x, y, z),
+                                Material = new DiffuseMaterial(new SolidColorBrush(vertex[x][y][z] ?? Color.FromRgb(239,84,252))),
+                                SideLength = 1,
+                            });
+                        }
+                    }
+                }
+            }
+            //---------------------preview--------------------------------------------
+
+
             VoxelsPreviewCamera.Position = new Point3D(
                 vertex.Count / 2,
                 vertex[0].Count / 2,
                 max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2
             );
             rotation = 0;
-            VoxelModelRotation.Angle = 0;
         }
 
         private void scaleChange(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -364,7 +396,6 @@ namespace ThreeDMineTools
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 rotation += (float)lastX - (float)e.GetPosition(sender as Viewport3D).X;
-                VoxelModelRotation.Angle = rotation;
             }
             lastX = e.GetPosition(sender as Viewport3D).X;
         }

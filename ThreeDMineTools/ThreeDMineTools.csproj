@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="CjClutter.ObjLoader" Version="1.0.0" />
+    <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.20.0" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
 
