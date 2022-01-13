@@ -326,53 +326,56 @@ namespace ThreeDMineTools
             StatusTB.Text = "converted";
 
 
+            //---------------------preview--------------------------------------------
             var sun = VoxelViewport.Children[0];
             VoxelViewport.Children.Clear();
             VoxelViewport.Children.Add(sun);
-            //foreach (var model in ModelConverter.VoxelToPolygon(vertex))
-            //{
-            //    VoxelViewport.Children.Add(new ModelVisual3D()
-            //    {
-            //        Content = new GeometryModel3D()
-            //        {
-            //            Geometry = new MeshGeometry3D()
-            //            {
-            //                Positions = model.Item1,
-            //                TriangleIndices = model.Item2
-            //            },
-            //            Material = new DiffuseMaterial()
-            //            {
-            //                Brush = new SolidColorBrush(model.Item3)
-            //            },
-            //            BackMaterial = new DiffuseMaterial()
-            //            {
-            //                Brush = new SolidColorBrush(model.Item3)
-            //            }
-            //        }
-            //    });
-            //}
-
-            //---------------------preview--------------------------------------------
-            for (int x = 0; x < vertex.Count; x++)
+            foreach (var model in ModelConverter.VoxelToPolygon(vertex))
             {
-                progress.Value = x / vertex.Count;
-                await Task.Delay(1);
-                for (int y = 0; y < vertex[x].Count; y++)
+                await Task.Delay(0);
+                VoxelViewport.Children.Add(new ModelVisual3D()
                 {
-                    for (int z = 0; z < vertex[x][y].Count; z++)
+                    Content = new GeometryModel3D()
                     {
-                        if (vertex[x][y][z] != null)
+                        Geometry = new MeshGeometry3D()
                         {
-                            VoxelViewport.Children.Add(new CubeVisual3D()
-                            {
-                                Center = new Point3D(x, y, z),
-                                Material = new DiffuseMaterial(new SolidColorBrush(vertex[x][y][z] ?? Color.FromRgb(239,84,252))),
-                                SideLength = 1,
-                            });
+                            Positions = model.Item1,
+                            TriangleIndices = model.Item2
+                        },
+                        Material = new DiffuseMaterial()
+                        {
+                            Brush = new SolidColorBrush(model.Item3),
+                            AmbientColor = Color.FromRgb(255,255,255)
+                        },
+                        BackMaterial = new DiffuseMaterial()
+                        {
+                            Brush = new SolidColorBrush(model.Item3),
+                            AmbientColor = Color.FromRgb(255, 255, 255)
                         }
                     }
-                }
+                });
             }
+
+            //for (int x = 0; x < vertex.Count; x++)
+            //{
+            //    progress.Value = x / vertex.Count;
+            //    await Task.Delay(1);
+            //    for (int y = 0; y < vertex[x].Count; y++)
+            //    {
+            //        for (int z = 0; z < vertex[x][y].Count; z++)
+            //        {
+            //            if (vertex[x][y][z] != null)
+            //            {
+            //                VoxelViewport.Children.Add(new CubeVisual3D()
+            //                {
+            //                    Center = new Point3D(x, y, z),
+            //                    Material = new DiffuseMaterial(new SolidColorBrush(vertex[x][y][z] ?? Color.FromRgb(239, 84, 252))),
+            //                    SideLength = 1,
+            //                });
+            //            }
+            //        }
+            //    }
+            //}
             //---------------------preview--------------------------------------------
 
 
@@ -381,7 +384,10 @@ namespace ThreeDMineTools
                 vertex[0].Count / 2,
                 max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2
             );
+            centerX = vertex.Count / 2;
+            centerZ = vertex[0][0].Count / 2;
             rotation = 0;
+            radius = max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2;
         }
 
         private void scaleChange(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -389,15 +395,34 @@ namespace ThreeDMineTools
             heightTB.Text = ((YMax - YMin) * scale.Value).ToString();
         }
 
+
         private float rotation = 0;
+        int centerX = 0, centerZ = 0;
+        private float radius = 0;
         private double lastX = 0;
-        private void UIElement_OnMouseMove(object sender, MouseEventArgs e)
+        private async void UIElement_OnMouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                rotation += (float)lastX - (float)e.GetPosition(sender as Viewport3D).X;
+                await Task.Delay(1);
+                rotation += ((float)lastX - (float)e.GetPosition(sender as Viewport3D).X) / 100;
+                rotation %= (float)(2 * Math.PI);
+                VoxelsPreviewCamera.Position = new Point3D(MathF.Cos(rotation) * radius+ centerX, VoxelsPreviewCamera.Position.Y, MathF.Sin(rotation)  * radius+ centerZ);
+                VoxelsPreviewCamera.LookDirection = new Vector3D(
+                    centerX - VoxelsPreviewCamera.Position.X,
+                    0,
+                    centerZ - VoxelsPreviewCamera.Position.Z
+                    );
+                //((VoxelViewport.Children.First() as ModelVisual3D).Content as DirectionalLight).Direction =
+                //    VoxelsPreviewCamera.LookDirection;
             }
             lastX = e.GetPosition(sender as Viewport3D).X;
+        }
+
+        private void GridToRotate_OnMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            radius -= (float)e.Delta / 10;
+            VoxelsPreviewCamera.Position = new Point3D(MathF.Cos(rotation) * radius + centerX, VoxelsPreviewCamera.Position.Y, MathF.Sin(rotation) * radius + centerZ);
         }
     }
 }

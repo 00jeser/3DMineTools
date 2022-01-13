@@ -40,34 +40,12 @@
             <Viewport3D.Children>
                 <ModelVisual3D>
                     <ModelVisual3D.Content>
-                        <DirectionalLight Color="White" Direction="-1,-1,-2" />
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
-                <ModelVisual3D x:Name="VoxelModel">
-                    <ModelVisual3D.Content>
-                        <GeometryModel3D>
-                            <GeometryModel3D.Geometry>
-                                <MeshGeometry3D x:Name="VoxelMesh"/>
-                            </GeometryModel3D.Geometry>
-                            <GeometryModel3D.Material>
-                                <DiffuseMaterial Brush="#97C0FE" />
-                            </GeometryModel3D.Material>
-                            <GeometryModel3D.BackMaterial>
-                                <DiffuseMaterial Brush="#97C0FE" />
-                            </GeometryModel3D.BackMaterial>
-                            <GeometryModel3D.Transform>
-                                <RotateTransform3D>
-                                    <RotateTransform3D.Rotation>
-                                        <AxisAngleRotation3D Axis="0,1,0" Angle="0"/>
-                                    </RotateTransform3D.Rotation>
-                                </RotateTransform3D>
-                            </GeometryModel3D.Transform>
-                        </GeometryModel3D>
+                        <AmbientLight Color="White" />
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
             </Viewport3D.Children>
         </Viewport3D>
-        <Grid x:Name="GridToRotate" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" MouseMove="UIElement_OnMouseMove"/>
+        <Grid x:Name="GridToRotate" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" MouseMove="UIElement_OnMouseMove" MouseWheel="GridToRotate_OnMouseWheel"/>
         <Viewport3D Grid.Column="1" Grid.Row="0" Width="300" Height="300" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Viewport3D.Camera>
                 <PerspectiveCamera x:Name="ModelPreviewCamera" Position="2,0,41" LookDirection="0.2,0.4,-1" FieldOfView="65"/>
@@ -93,7 +71,7 @@
             </Viewport3D.Children>
         </Viewport3D>
         <ScrollViewer Grid.Column="1" MaxWidth="300" MaxHeight="300" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-            <Canvas Grid.Column="2" Grid.Row="0" x:Name="cnv"/>
+            <Canvas x:Name="cnv"/>
         </ScrollViewer>
         <Slider Grid.Column="1" Grid.Row="1" x:Name="scale" IsEnabled="False" ValueChanged="scaleChange"></Slider>
         <ProgressBar Grid.Column="1" Grid.Row="2" x:Name="progress" Maximum="1"/>
