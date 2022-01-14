@@ -60,146 +60,165 @@ namespace ThreeDMineTools
                 return f2;
             return f3;
         }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PixelColor
+        {
+            public byte B;
+            public byte G;
+            public byte R;
+            public byte A;
+        }
+
+        public static PixelColor[,] GetPixels(BitmapSource source)
+        {
+            if (source.Format != PixelFormats.Bgra32)
+                source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+            PixelColor[,] pixels = new PixelColor[source.PixelWidth, source.PixelHeight];
+            int stride = source.PixelWidth * ((source.Format.BitsPerPixel + 7) / 8);
+            GCHandle pinnedPixels = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+            source.CopyPixels(
+                new Int32Rect(0, 0, source.PixelWidth, source.PixelHeight),
+                pinnedPixels.AddrOfPinnedObject(),
+                pixels.GetLength(0) * pixels.GetLength(1) * 4,
+                stride);
+            pinnedPixels.Free();
+            return pixels;
+        }
 
         private float XMax = float.MinValue, YMax = float.MinValue, ZMax = float.MinValue, XMin = float.MaxValue, YMin = float.MaxValue, ZMin = float.MaxValue;
 
         private async void OpenModel(object sender, RoutedEventArgs e)
         {
+            writeButton.IsEnabled = false;
             StatusTB.Text = "opening...";
             OpenFileDialog openFileDialog = new();
-            openFileDialog.Filter = "obj|*.obj";
+            openFileDialog.Filter = "all|*.obj;*.stl|obj|*.obj|stl|*.stl";
             openFileDialog.ShowDialog();
 
             if (openFileDialog.FileName.IsNullOrEmpty())
                 return;
 
-            if (!File.Exists(openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl")))
-                File.Copy(openFileDialog.FileName.Replace(".obj", ".mtl"), openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl"));
 
             progress.Value = 0.1;
             await Task.Delay(1);
 
-            ObjLoaderFactory objLoaderFactory = new ObjLoaderFactory();
-            IObjLoader? objLoader = objLoaderFactory.Create();
-            FileStream fileStream = new FileStream(openFileDialog.FileName, FileMode.Open);
-            LoadResult? result = objLoader.Load(fileStream);
-            fileStream.Close();
+            XMax = float.MinValue;
+            YMax = float.MinValue;
+            ZMax = float.MinValue;
+            XMin = float.MaxValue;
+            YMin = float.MaxValue;
+            ZMin = float.MaxValue;
+
+            ModelReader CurrentHelixObjReader = openFileDialog.FileName.EndsWith(".obj") ? new ObjReader() : new StLReader();
+            Model3DGroup MyModel3DGroup = CurrentHelixObjReader.Read(openFileDialog.FileName);
+
+            VoxelViewport.Children.Clear();
+            VoxelViewport.Children.Add(new ModelVisual3D()
+            {
+                Content = new AmbientLight()
+                {
+                    Color = Color.FromRgb(255, 255, 255),
+                }
+            });
+            VoxelViewport.Children.Add(new ModelVisual3D()
+            {
+                Content = new DirectionalLight()
+                {
+                    Color = Color.FromRgb(255, 255, 255),
+                    Direction = new Vector3D(-1, -1, -2),
+                }
+            });
+            VoxelViewport.Children.Add(new ModelVisual3D()
+            {
+                Content = MyModel3DGroup
+            });
+
+            foreach (var model3d in MyModel3DGroup.Children)
+            {
+                XMax = MathF.Max(XMax, (float)(model3d.Bounds.X + model3d.Bounds.SizeX));
+                YMax = MathF.Max(YMax, (float)(model3d.Bounds.Y + model3d.Bounds.SizeY));
+                ZMax = MathF.Max(ZMax, (float)(model3d.Bounds.Z + model3d.Bounds.SizeZ));
+                XMin = MathF.Min(XMin, (float)model3d.Bounds.X);
+                YMin = MathF.Min(YMin, (float)model3d.Bounds.Y);
+                ZMin = MathF.Min(ZMin, (float)model3d.Bounds.Z);
+            }
 
             progress.Value = 0.2;
             await Task.Delay(1);
 
-            Model3D.Positions.Clear();
-            Model3D.TriangleIndices.Clear();
-            for (int i = 0; i < result.Vertices.Count; i++)
+            var mats = new List<Material>();
+            var polygons = new List<MPolygon>(1000);
+            foreach (var model3d in MyModel3DGroup.Children)
             {
-                Vertex p = result.Vertices[i];
-                p = new Vertex(p.X, p.Y, p.Z);
-                XMax = MathF.Max(XMax, p.X);
-                YMax = MathF.Max(YMax, p.Y);
-                ZMax = MathF.Max(ZMax, p.Z);
-                XMin = MathF.Min(XMin, p.X);
-                YMin = MathF.Min(YMin, p.Y);
-                ZMin = MathF.Min(ZMin, p.Z);
-                Model3D.Positions.Add(new Point3D(p.X, p.Y, p.Z));
-            }
-
-
-            progress.Value = 0.4;
-            await Task.Delay(1);
-
-            scale.Minimum = 10 / (YMax - YMin);
-            scale.Maximum = 250 / (YMax - YMin);
-            scale.Value = 1;
-            scale.IsEnabled = true;
-
-            List<MPolygon> polygons = new List<MPolygon>();
-            foreach (Group? resultGroup in result.Groups)
-            {
-                if (resultGroup == null)
-                    continue;
-                Bitmap bmp = null;
-                if (resultGroup.Material.DiffuseTextureMap != null)
+                if (model3d is GeometryModel3D gmodel3d)
                 {
-                    bmp = (Bitmap)Image.FromFile(resultGroup.Material.DiffuseTextureMap);
-                    cnv.Height = bmp.Height;
-                    cnv.Width = bmp.Width;
-
-
-                    cnv.Background = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bmp.GetHbitmap(),
-                        IntPtr.Zero,
-                        Int32Rect.Empty,
-                        BitmapSizeOptions.FromEmptyOptions()
-                    ));
-                }
-
-                foreach (Face? face in resultGroup.Faces)
-                {
-                    if (face == null)
-                        continue;
-                    Model3D.TriangleIndices.Add(face[0].VertexIndex - 1);
-                    Model3D.TriangleIndices.Add(face[1].VertexIndex - 1);
-                    Model3D.TriangleIndices.Add(face[2].VertexIndex - 1);
-
-                    int avgR = 1, avgG = 1, avgB = 1, avgCount = 0;
-                    if (bmp != null)
+                    DiffuseMaterial mat2 = new DiffuseMaterial(new SolidColorBrush(Color.FromRgb(0, 0, 0)));
+                    if (gmodel3d.Material is MaterialGroup mat)
                     {
-                        var uvp1 = result.Textures[face[0].VertexIndex - 1];
-                        var uvp2 = result.Textures[face[1].VertexIndex - 1];
-                        var uvp3 = result.Textures[face[2].VertexIndex - 1];
-                        uvp1 = new Texture(uvp1.X * bmp.Width, bmp.Height - uvp1.Y * bmp.Height);
-                        uvp2 = new Texture(uvp2.X * bmp.Width, bmp.Height - uvp2.Y * bmp.Height);
-                        uvp3 = new Texture(uvp3.X * bmp.Width, bmp.Height - uvp3.Y * bmp.Height);
+                        mats.AddRange(mat.Children);
+                        mat2 = mat.Children[0] as DiffuseMaterial;
+                    }
+                    else if (gmodel3d.Material is DiffuseMaterial dmat)
+                    {
+                        mats.Add(dmat);
+                        mat2 = dmat;
+                    }
 
-                        System.Drawing.Color TmpCol;
-                        TmpCol = bmp.GetPixel((int)uvp1.X % bmp.Width, (int)uvp1.Y % bmp.Height);
-                        avgR += TmpCol.R;
-                        avgG += TmpCol.G;
-                        avgB += TmpCol.B;
-                        TmpCol = bmp.GetPixel((int)uvp2.X % bmp.Width, (int)uvp2.Y % bmp.Height);
-                        avgR += TmpCol.R;
-                        avgG += TmpCol.G;
-                        avgB += TmpCol.B;
-                        TmpCol = bmp.GetPixel((int)uvp3.X % bmp.Width, (int)uvp3.Y % bmp.Height);
-                        avgR += TmpCol.R;
-                        avgG += TmpCol.G;
-                        avgB += TmpCol.B;
-                        avgCount += 3;
+                    PixelColor[,] pixels = new PixelColor[0, 0];
+                    double width = 0;
+                    double height = 0;
+                    if (mat2.Brush is ImageBrush)
+                    {
+                        pixels = GetPixels((mat2.Brush as ImageBrush).ImageSource as BitmapSource);
+                        width = pixels.GetLength(0);
+                        height = pixels.GetLength(1);
+                    }
 
-                        if (avgCount != 0)
+                    if (gmodel3d.Geometry is MeshGeometry3D mesh)
+                    {
+                        for (int i = 0; i < mesh.TriangleIndices.Count; i += 3)
                         {
-                            avgR /= avgCount;
-                            avgG /= avgCount;
-                            avgB /= avgCount;
-                        }
-                        cnv.Children.Add(new Polygon()
-                        {
-                            Stroke = new SolidColorBrush(Color.FromArgb(153, 206, 148, 0)),
-                            Points = new PointCollection()
+                            var poly = new MPolygon()
                             {
-                                new(uvp1.X, uvp1.Y),
-                                new(uvp2.X, uvp3.Y),
-                                new(uvp3.X, uvp2.Y),
-                            },
-                            StrokeThickness = 1,
-                            Fill = new SolidColorBrush(Color.FromArgb(76, 206, 148, 0))
-                        });
-                    }
-                    else
-                    {
-                        avgR = (byte)(resultGroup.Material.DiffuseColor.X * 255);
-                        avgG = (byte)(resultGroup.Material.DiffuseColor.Y * 255);
-                        avgB = (byte)(resultGroup.Material.DiffuseColor.Z * 255);
-                    }
+                                Point1 = new MPoint(mesh.Positions[mesh.TriangleIndices[i]]),
+                                Point2 = new MPoint(mesh.Positions[mesh.TriangleIndices[i + 1]]),
+                                Point3 = new MPoint(mesh.Positions[mesh.TriangleIndices[i + 2]])
+                            };
+                            if (mat2.Brush is SolidColorBrush)
+                                poly.AverageColor = (mat2.Brush as SolidColorBrush).Color;
+                            else if (mat2.Brush is ImageBrush)
+                            {
+                                int r = 0;
+                                int g = 0;
+                                int b = 0;
+                                var x = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].X - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].X) * (height - 1);
+                                var y = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y -(int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y) * (width - 1);
+                                var clr = pixels[(int)(y), (int)(x)];
+                                r += clr.R;
+                                g += clr.G;
+                                b += clr.B;
+                                x = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].X - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].X) * (height - 1);
+                                y = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y) * (width - 1);
+                                clr = pixels[(int)(y), (int)(x)];
+                                r += clr.R;
+                                g += clr.G;
+                                b += clr.B;
+                                x = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].X - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].X) * (height - 1);
+                                y = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y) * (width - 1);
+                                clr = pixels[(int)(y), (int)(x)];
+                                r += clr.R;
+                                g += clr.G;
+                                b += clr.B;
+                                r /= 3;
+                                g /= 3;
+                                b /= 3;
+                                poly.AverageColor = Color.FromRgb((byte)r, (byte)g, (byte)b);
+                            }
 
-                    var ppp = new MPolygon()
-                    {
-                        Point1 = new MPoint(Model3D.Positions[face[0].VertexIndex - 1]),
-                        Point2 = new MPoint(Model3D.Positions[face[1].VertexIndex - 1]),
-                        Point3 = new MPoint(Model3D.Positions[face[2].VertexIndex - 1]),
-                        AverageColor = Color.FromRgb((byte)(avgR), (byte)(avgG), (byte)(avgB))
-                    };
+                            polygons.Add(poly);
 
-                    polygons.Add(ppp);
+                        }
+                    }
                 }
             }
 
@@ -219,10 +238,16 @@ namespace ThreeDMineTools
             convertButton.IsEnabled = true;
             File.Delete(openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl"));
 
-            ModelPreviewCamera.Position = new Point3D(0, (YMax + YMin) / 2, max(XMax - XMin, YMax - YMin, ZMax - ZMin) * 2);
-            VoxelsPreviewCamera.Position = new Point3D(0, (YMax + YMin) / 2, max(XMax - XMin, YMax - YMin, ZMax - ZMin) * 2);
-            ModelPreviewCamera.LookDirection = new Vector3D((XMax + XMin) / 2 - ModelPreviewCamera.Position.X, (YMax + YMin) / 2 - ModelPreviewCamera.Position.Y, (ZMax + ZMin) / 2 - ModelPreviewCamera.Position.Z);
-            VoxelsPreviewCamera.LookDirection = new Vector3D((XMax + XMin) / 2 - ModelPreviewCamera.Position.X, (YMax + YMin) / 2 - ModelPreviewCamera.Position.Y, (ZMax + ZMin) / 2 - ModelPreviewCamera.Position.Z);
+            scale.Minimum = 10 / (YMax - YMin);
+            scale.Maximum = 250 / (YMax - YMin);
+            scale.Value = 1;
+            scale.IsEnabled = true;
+
+            radius = max(XMax - XMin, YMax - YMin, ZMax - ZMin) * 2;
+            centerX = (int)((XMax + XMin) / 2);
+            centerZ = (int)((ZMax + ZMin) / 2);
+            VoxelsPreviewCamera.Position = new Point3D(0, (YMax + YMin) / 2, radius);
+            VoxelsPreviewCamera.LookDirection = new Vector3D((XMax + XMin) / 2 - VoxelsPreviewCamera.Position.X, (YMax + YMin) / 2 - VoxelsPreviewCamera.Position.Y, (ZMax + ZMin) / 2 - VoxelsPreviewCamera.Position.Z);
 
             progress.Value = 1;
             StatusTB.Text = "opened";
@@ -284,6 +309,12 @@ namespace ThreeDMineTools
 
         private async void ConvertModel(object sender, RoutedEventArgs e)
         {
+            XMax = float.MinValue;
+            YMax = float.MinValue;
+            ZMax = float.MinValue;
+            XMin = float.MaxValue;
+            YMin = float.MaxValue;
+            ZMin = float.MaxValue;
             MModel newModel = new();
             newModel.YMin = model.YMin * (float)scale.Value;
             newModel.XMin = model.XMin * (float)scale.Value;
@@ -307,6 +338,7 @@ namespace ThreeDMineTools
             }
 
             convertButton.IsEnabled = false;
+            writeButton.IsEnabled = false;
             var t = new Task(AlghoType.SelectedIndex switch
             {
                 0 => () => vertex = ModelConverter.PolygonToVoxel(newModel),
@@ -319,7 +351,7 @@ namespace ThreeDMineTools
             {
                 await Task.Delay(100);
                 progress.Value = ModelConverter.progress;
-                StatusTB.Text = $"converting...({(int)(ModelConverter.progress * 100)}%)";
+                StatusTB.Text = $"converting...({(ModelConverter.progress * 100):F1}%)";
             }
             writeButton.IsEnabled = true;
             convertButton.IsEnabled = true;
@@ -327,9 +359,22 @@ namespace ThreeDMineTools
 
 
             //---------------------preview--------------------------------------------
-            var sun = VoxelViewport.Children[0];
             VoxelViewport.Children.Clear();
-            VoxelViewport.Children.Add(sun);
+            VoxelViewport.Children.Add(new ModelVisual3D()
+            {
+                Content = new AmbientLight()
+                {
+                    Color = Color.FromRgb(255, 255, 255)
+                }
+            });
+            VoxelViewport.Children.Add(new ModelVisual3D()
+            {
+                Content = new DirectionalLight()
+                {
+                    Color = Color.FromRgb(255, 255, 255),
+                    Direction = new Vector3D(-1, -1, -2)
+                }
+            });
             foreach (var model in ModelConverter.VoxelToPolygon(vertex))
             {
                 await Task.Delay(0);
@@ -345,7 +390,7 @@ namespace ThreeDMineTools
                         Material = new DiffuseMaterial()
                         {
                             Brush = new SolidColorBrush(model.Item3),
-                            AmbientColor = Color.FromRgb(255,255,255)
+                            AmbientColor = Color.FromRgb(255, 255, 255)
                         },
                         BackMaterial = new DiffuseMaterial()
                         {
@@ -407,7 +452,7 @@ namespace ThreeDMineTools
                 await Task.Delay(1);
                 rotation += ((float)lastX - (float)e.GetPosition(sender as Viewport3D).X) / 100;
                 rotation %= (float)(2 * Math.PI);
-                VoxelsPreviewCamera.Position = new Point3D(MathF.Cos(rotation) * radius+ centerX, VoxelsPreviewCamera.Position.Y, MathF.Sin(rotation)  * radius+ centerZ);
+                VoxelsPreviewCamera.Position = new Point3D(MathF.Cos(rotation) * radius + centerX, VoxelsPreviewCamera.Position.Y, MathF.Sin(rotation) * radius + centerZ);
                 VoxelsPreviewCamera.LookDirection = new Vector3D(
                     centerX - VoxelsPreviewCamera.Position.X,
                     0,

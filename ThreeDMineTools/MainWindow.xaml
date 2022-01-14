@@ -37,42 +37,8 @@
             <Viewport3D.Camera>
                 <PerspectiveCamera x:Name="VoxelsPreviewCamera" Position="2,0,241" LookDirection="00,00,-1" FieldOfView="90"/>
             </Viewport3D.Camera>
-            <Viewport3D.Children>
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <AmbientLight Color="White" />
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
-            </Viewport3D.Children>
         </Viewport3D>
         <Grid x:Name="GridToRotate" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" MouseMove="UIElement_OnMouseMove" MouseWheel="GridToRotate_OnMouseWheel"/>
-        <Viewport3D Grid.Column="1" Grid.Row="0" Width="300" Height="300" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <Viewport3D.Camera>
-                <PerspectiveCamera x:Name="ModelPreviewCamera" Position="2,0,41" LookDirection="0.2,0.4,-1" FieldOfView="65"/>
-            </Viewport3D.Camera>
-            <Viewport3D.Children>
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <DirectionalLight Color="White" Direction="-1,-1,-2" />
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <GeometryModel3D>
-                            <GeometryModel3D.Geometry>
-                                <MeshGeometry3D x:Name="Model3D"/>
-                            </GeometryModel3D.Geometry>
-                            <GeometryModel3D.Material>
-                                <DiffuseMaterial Brush="#3B457D" />
-                            </GeometryModel3D.Material>
-                        </GeometryModel3D>
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
-            </Viewport3D.Children>
-        </Viewport3D>
-        <ScrollViewer Grid.Column="1" MaxWidth="300" MaxHeight="300" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-            <Canvas x:Name="cnv"/>
-        </ScrollViewer>
         <Slider Grid.Column="1" Grid.Row="1" x:Name="scale" IsEnabled="False" ValueChanged="scaleChange"></Slider>
         <ProgressBar Grid.Column="1" Grid.Row="2" x:Name="progress" Maximum="1"/>
         <TextBlock Grid.Row="2" x:Name="StatusTB"/>
