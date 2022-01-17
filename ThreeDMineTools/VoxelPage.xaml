@@ -1,15 +1,11 @@
-﻿<Window x:Class="ThreeDMineTools.MainWindow"
+﻿<Grid x:Class="ThreeDMineTools.VoxelPage"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ThreeDMineTools"
-        mc:Ignorable="d"
-        Title="3DMineTools"
-        WindowState="Maximized"
-        Icon="./Resources/logo.ico">
-    <Grid>
-        <Grid.ColumnDefinitions>
+        mc:Ignorable="d">
+    <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="100"/>
@@ -42,5 +38,4 @@
         <Slider Grid.Column="1" Grid.Row="1" x:Name="scale" IsEnabled="False" ValueChanged="scaleChange"></Slider>
         <ProgressBar Grid.Column="1" Grid.Row="2" x:Name="progress" Maximum="1"/>
         <TextBlock Grid.Row="2" x:Name="StatusTB"/>
-    </Grid>
-</Window>
+</Grid>

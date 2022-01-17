@@ -35,10 +35,10 @@ using Polygon = System.Windows.Shapes.Polygon;
 
 namespace ThreeDMineTools
 {
-    public partial class MainWindow : Window
+    public partial class VoxelPage : Grid, IDisposable
     {
 
-        public MainWindow()
+        public VoxelPage()
         {
             InitializeComponent();
         }
@@ -148,11 +148,14 @@ namespace ThreeDMineTools
 
             var mats = new List<Material>();
             var polygons = new List<MPolygon>(1000);
+
+            DiffuseMaterial mat2;
+            PixelColor[,] pixels;
             foreach (var model3d in MyModel3DGroup.Children)
             {
                 if (model3d is GeometryModel3D gmodel3d)
                 {
-                    DiffuseMaterial mat2 = new DiffuseMaterial(new SolidColorBrush(Color.FromRgb(0, 0, 0)));
+                    mat2 = new DiffuseMaterial(new SolidColorBrush(Color.FromRgb(0, 0, 0)));
                     if (gmodel3d.Material is MaterialGroup mat)
                     {
                         mats.AddRange(mat.Children);
@@ -164,7 +167,7 @@ namespace ThreeDMineTools
                         mat2 = dmat;
                     }
 
-                    PixelColor[,] pixels = new PixelColor[0, 0];
+                    pixels = new PixelColor[0, 0];
                     double width = 0;
                     double height = 0;
                     if (mat2.Brush is ImageBrush)
@@ -192,7 +195,7 @@ namespace ThreeDMineTools
                                 int g = 0;
                                 int b = 0;
                                 var x = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].X - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].X) * (height - 1);
-                                var y = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y -(int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y) * (width - 1);
+                                var y = (mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y - (int)mesh.TextureCoordinates[mesh.TriangleIndices[i]].Y) * (width - 1);
                                 var clr = pixels[(int)(y), (int)(x)];
                                 r += clr.R;
                                 g += clr.G;
@@ -251,6 +254,8 @@ namespace ThreeDMineTools
 
             progress.Value = 1;
             StatusTB.Text = "opened";
+
+            GC.Collect(3);
         }
 
         private MModel model;
@@ -400,27 +405,7 @@ namespace ThreeDMineTools
                     }
                 });
             }
-
-            //for (int x = 0; x < vertex.Count; x++)
-            //{
-            //    progress.Value = x / vertex.Count;
-            //    await Task.Delay(1);
-            //    for (int y = 0; y < vertex[x].Count; y++)
-            //    {
-            //        for (int z = 0; z < vertex[x][y].Count; z++)
-            //        {
-            //            if (vertex[x][y][z] != null)
-            //            {
-            //                VoxelViewport.Children.Add(new CubeVisual3D()
-            //                {
-            //                    Center = new Point3D(x, y, z),
-            //                    Material = new DiffuseMaterial(new SolidColorBrush(vertex[x][y][z] ?? Color.FromRgb(239, 84, 252))),
-            //                    SideLength = 1,
-            //                });
-            //            }
-            //        }
-            //    }
-            //}
+            
             //---------------------preview--------------------------------------------
 
 
@@ -431,7 +416,12 @@ namespace ThreeDMineTools
             );
             centerX = vertex.Count / 2;
             centerZ = vertex[0][0].Count / 2;
-            rotation = 0;
+            VoxelsPreviewCamera.LookDirection = new Vector3D(
+                centerX - VoxelsPreviewCamera.Position.X,
+                0,
+                centerZ - VoxelsPreviewCamera.Position.Z
+            );
+            rotation = MathF.PI/2;
             radius = max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2;
         }
 
@@ -441,7 +431,7 @@ namespace ThreeDMineTools
         }
 
 
-        private float rotation = 0;
+        private float rotation = MathF.PI / 2;
         int centerX = 0, centerZ = 0;
         private float radius = 0;
         private double lastX = 0;
@@ -468,6 +458,26 @@ namespace ThreeDMineTools
         {
             radius -= (float)e.Delta / 10;
             VoxelsPreviewCamera.Position = new Point3D(MathF.Cos(rotation) * radius + centerX, VoxelsPreviewCamera.Position.Y, MathF.Sin(rotation) * radius + centerZ);
+        }
+        ~VoxelPage()
+        {
+            ReleaseUnmanagedResources();
+        }
+
+        private void ReleaseUnmanagedResources()
+        {
+            vertex = null;
+            model = null;
+            VoxelViewport.Children.Clear();
+            VoxelViewport = null;
+            GC.Collect(3, GCCollectionMode.Forced);
+            GC.WaitForPendingFinalizers();
+        }
+
+        public void Dispose()
+        {
+            ReleaseUnmanagedResources();
+            GC.SuppressFinalize(this);
         }
     }
 }
