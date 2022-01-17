@@ -14,9 +14,6 @@ using System.Windows.Shapes;
 
 namespace ThreeDMineTools
 {
-    /// <summary>
-    /// Логика взаимодействия для ApplicationWindow.xaml
-    /// </summary>
     public partial class ApplicationWindow : Window
     {
         public ApplicationWindow()

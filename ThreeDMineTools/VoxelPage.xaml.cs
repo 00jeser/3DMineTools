@@ -43,7 +43,6 @@ namespace ThreeDMineTools
             InitializeComponent();
         }
 
-
         private float max(float f1, float f2, float f3)
         {
             if (f1 > f2 && f1 > f3)
@@ -118,14 +117,6 @@ namespace ThreeDMineTools
                 Content = new AmbientLight()
                 {
                     Color = Color.FromRgb(255, 255, 255),
-                }
-            });
-            VoxelViewport.Children.Add(new ModelVisual3D()
-            {
-                Content = new DirectionalLight()
-                {
-                    Color = Color.FromRgb(255, 255, 255),
-                    Direction = new Vector3D(-1, -1, -2),
                 }
             });
             VoxelViewport.Children.Add(new ModelVisual3D()
@@ -239,7 +230,6 @@ namespace ThreeDMineTools
                 ZMax = ZMax
             };
             convertButton.IsEnabled = true;
-            File.Delete(openFileDialog.FileName.Split("\\").Last().Replace(".obj", ".mtl"));
 
             scale.Minimum = 10 / (YMax - YMin);
             scale.Maximum = 250 / (YMax - YMin);
@@ -372,14 +362,6 @@ namespace ThreeDMineTools
                     Color = Color.FromRgb(255, 255, 255)
                 }
             });
-            VoxelViewport.Children.Add(new ModelVisual3D()
-            {
-                Content = new DirectionalLight()
-                {
-                    Color = Color.FromRgb(255, 255, 255),
-                    Direction = new Vector3D(-1, -1, -2)
-                }
-            });
             foreach (var model in ModelConverter.VoxelToPolygon(vertex))
             {
                 await Task.Delay(0);
@@ -448,8 +430,6 @@ namespace ThreeDMineTools
                     0,
                     centerZ - VoxelsPreviewCamera.Position.Z
                     );
-                //((VoxelViewport.Children.First() as ModelVisual3D).Content as DirectionalLight).Direction =
-                //    VoxelsPreviewCamera.LookDirection;
             }
             lastX = e.GetPosition(sender as Viewport3D).X;
         }
