@@ -1,0 +1,8 @@
+main_id;supplementary_id;id;en_US;ru_RU
+1;0;stone;stone;Камень
+1;1;granite;granite;Гранит
+1;2;polished_granite;polished granite;Полированный гранит
+1;3;diorite;diorite;Диорит
+1;4;polished_diorite;polished diorite;Полированный диорит
+1;5;andesite;andesite;Андезит
+;6;polished_andesite;polished andesite;Полированный андезит
