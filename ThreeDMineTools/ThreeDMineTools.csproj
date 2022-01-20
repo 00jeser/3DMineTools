@@ -10,12 +10,17 @@
 
   <ItemGroup>
     <None Remove="Resources\logo.ico" />
+    <None Remove="Textures\blocks.csv" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Resources\logo.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Textures\blocks.csv" />
   </ItemGroup>
 
   <ItemGroup>
