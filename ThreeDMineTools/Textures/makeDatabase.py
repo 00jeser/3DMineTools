@@ -21,7 +21,7 @@ for i in images:
         g = int(g/256)
         b = int(b/256)
         block = [j for j in i.split('.')[0].split('_')]
-        rez.append(f"{block[0]},{block[1]},{(hex(r)[2:]).rjust(2, '0')}{(hex(g)[2:]).rjust(2, '0')}{(hex(b)[2:]).rjust(2, '0')}")
+        rez.append(f"{block[0]},{block[1]},{(hex(r)[2:]).rjust(2, '0')}{(hex(g)[2:]).rjust(2, '0')}{(hex(b)[2:]).rjust(2, '0')}".upper())
         im.close()
 
 open('blocks.csv', 'w').write('\n'.join(rez))
