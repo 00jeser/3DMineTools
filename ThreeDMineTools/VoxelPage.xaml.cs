@@ -275,7 +275,7 @@ namespace ThreeDMineTools
                         }
                         else
                         {
-                            (byte, byte) r = BlockPicker.GetBlockFroColor((Color)vertex[x][y][z]);
+                            (byte, byte) r = blockPicker.GetBlockFroColor((Color)vertex[x][y][z]);
                             bytes.Add(r.Item1);
                             data.Add(r.Item2);
                         }
@@ -364,6 +364,8 @@ namespace ThreeDMineTools
             });
             foreach (var model in ModelConverter.VoxelToPolygon(vertex))
             {
+                if(!voxelColors.Contains(model.Item3))
+                    voxelColors.Add(model.Item3);
                 await Task.Delay(0);
                 VoxelViewport.Children.Add(new ModelVisual3D()
                 {
@@ -387,7 +389,7 @@ namespace ThreeDMineTools
                     }
                 });
             }
-            
+
             //---------------------preview--------------------------------------------
 
 
@@ -403,7 +405,7 @@ namespace ThreeDMineTools
                 0,
                 centerZ - VoxelsPreviewCamera.Position.Z
             );
-            rotation = MathF.PI/2;
+            rotation = MathF.PI / 2;
             radius = max(vertex.Count, vertex[0].Count, vertex[0][0].Count) * 2;
         }
 
@@ -458,6 +460,32 @@ namespace ThreeDMineTools
         {
             ReleaseUnmanagedResources();
             GC.SuppressFinalize(this);
+        }
+
+        private BlockPicker blockPicker = new BlockPicker();
+                    List<Color> voxelColors = new();
+        private void ChangeColorMode(object sender, SelectionChangedEventArgs e)
+        {
+            blockPicker = new BlockPicker();
+            switch ((sender as ComboBox).SelectedIndex)
+            {
+                case 0:
+                    blockPicker.Init();
+                    break;
+                case 1:
+                    BlockFilterWindow filter = new BlockFilterWindow();
+                    filter.ShowDialog();
+                    if (filter.selectedBytes != null)
+                        blockPicker.Init(filter.selectedBytes);
+                    else
+                        blockPicker.Init();
+                    break;
+                case 2:
+                    ColorForBlockSelectorWindow colorFilter = new ColorForBlockSelectorWindow(voxelColors);
+                    colorFilter.ShowDialog();
+                    blockPicker.Init(colorFilter.Blocks);
+                    break;
+            }
         }
     }
 }

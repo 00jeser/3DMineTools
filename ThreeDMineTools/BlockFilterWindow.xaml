@@ -1,0 +1,50 @@
+﻿<Window x:Class="ThreeDMineTools.BlockFilterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ThreeDMineTools"
+        xmlns:tools="clr-namespace:ThreeDMineTools.Tools"
+        mc:Ignorable="d"
+        Title="BlockFilterWindow" Height="450" Width="800"
+        Loaded="Window_OnLoaded">
+    <Window.Resources>
+        <local:BlockToImageConverter x:Key="blockImageCnv"/>
+        <tools:BlockToNameConverter x:Key="blockNameCnv"/>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <ListBox SelectionMode="Multiple" x:Name="list" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" IsItemsHost="True"/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding}"/>
+                        <Image Height="32" Width="32" Source="{Binding Converter={StaticResource blockImageCnv}}"/>
+                        <TextBlock Text="{Binding Converter={StaticResource blockNameCnv}}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Grid Grid.Row="1">
+            <WrapPanel Orientation="Horizontal">
+                <Button>Select all wool</Button>
+                <Button>Select all ceramic</Button>
+                <Button>Select all</Button>
+            </WrapPanel>
+        </Grid>
+        <Grid Grid.Row="2">
+            <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5" Click="Apply">
+                Apply
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

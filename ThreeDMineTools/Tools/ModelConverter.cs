@@ -196,7 +196,7 @@ public static class ModelConverter
             b += clr.B;
         }
 
-        return Color.FromRgb((byte)((r / clrs.Count)/10*10), (byte)((g / clrs.Count)/10*10), (byte)((b / clrs.Count)/10*10));
+        return Color.FromRgb((byte)((r / clrs.Count)/50*50), (byte)((g / clrs.Count)/50*50), (byte)((b / clrs.Count)/50*50));
     }
 
     public static List<(Point3DCollection, Int32Collection, Color)> VoxelToPolygon(List<List<List<Color?>>> vertex)
