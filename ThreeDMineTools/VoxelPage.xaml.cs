@@ -334,11 +334,13 @@ namespace ThreeDMineTools
 
             convertButton.IsEnabled = false;
             writeButton.IsEnabled = false;
+            byte round = (byte) ColorRoundValue.Value;
             var t = new Task(AlghoType.SelectedIndex switch
             {
-                0 => () => vertex = ModelConverter.PolygonToVoxel(newModel),
-                1 => () => vertex = ModelConverter.PolygonToVoxel2(newModel),
-                2 => () => vertex = ModelConverter.PolygonToVoxel3(newModel)
+                0 => () => vertex = ModelConverter.PolygonToVoxel(newModel, round),
+                1 => () => vertex = ModelConverter.PolygonToVoxel2(newModel, round),
+                2 => () => vertex = ModelConverter.PolygonToVoxel3(newModel, false, round),
+                3 => () => vertex = ModelConverter.PolygonToVoxel3(newModel, true, round)
             }
             );
             t.Start();

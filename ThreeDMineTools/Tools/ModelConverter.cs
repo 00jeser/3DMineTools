@@ -15,7 +15,7 @@ public static class ModelConverter
     public static extern int Intersection(MPoint voxel, MPoint Triangle1, MPoint Triangle2, MPoint Triangle3);
 
     public static double progress = 0;
-    public static List<List<List<Color?>>> PolygonToVoxel(MModel model)
+    public static List<List<List<Color?>>> PolygonToVoxel(MModel model, byte RoundColor = 1)
     {
         var MaxProgress = ((int)model.XMax + 1) - ((int)model.XMin - 1);
         var CurentProgress = 0d;
@@ -33,7 +33,7 @@ public static class ModelConverter
                     {
                         if (Intersection(new MPoint(x, y, z), poly.Point1, poly.Point2, poly.Point3) == 1)
                         {
-                            c = poly.AverageColor;
+                            c = Color.FromRgb((byte)(poly.AverageColor.R/RoundColor*RoundColor), (byte)(poly.AverageColor.G / RoundColor * RoundColor), (byte)(poly.AverageColor.B / RoundColor * RoundColor));
                             break;
                         }
                     }
@@ -48,7 +48,7 @@ public static class ModelConverter
         return rez;
     }
 
-    public static List<List<List<Color?>>> PolygonToVoxel2(MModel model)
+    public static List<List<List<Color?>>> PolygonToVoxel2(MModel model, byte RoundColor = 1)
     {
         List<List<List<Color?>>> rez = new();
         var dX = (int)model.XMin - 1;
@@ -86,7 +86,7 @@ public static class ModelConverter
                                     betwen(polyz.Point1.X, x, polyz.Point3.X) ||
                                     betwen(polyz.Point3.X, x, polyz.Point2.X))
                                 {
-                                    rez[x - dX][y - dY][z - dZ] = polyz.AverageColor;
+                                    rez[x - dX][y - dY][z - dZ] = Color.FromRgb((byte)(polyz.AverageColor.R / RoundColor * RoundColor), (byte)(polyz.AverageColor.G / RoundColor * RoundColor), (byte)(polyz.AverageColor.B / RoundColor * RoundColor));
                                 }
                             }
                         }
@@ -105,7 +105,7 @@ public static class ModelConverter
     private static bool betwen(float first, float value, float second) => (first <= value && value <= second) || (first >= value && value >= second);
 
 
-    public static List<List<List<Color?>>> PolygonToVoxel3(MModel model)
+    public static List<List<List<Color?>>> PolygonToVoxel3(MModel model, bool firstColor, byte RoundColor = 1)
     {
         List<List<List<List<Color>>>> rezs = new((int)(model.XMax - model.XMin));
         var dX = (int)model.XMin - 1;
@@ -158,7 +158,13 @@ public static class ModelConverter
                 rez.Last().Add(new List<Color?>());
                 for (int z = 0; z < rezs[x][y].Count; z++)
                 {
-                    rez.Last().Last().Add(avgColor(rezs[x][y][z]));
+                    if (firstColor)
+                        if (rezs[x][y][z].Count == 0)
+                            rez.Last().Last().Add(null);
+                        else
+                            rez.Last().Last().Add(rezs[x][y][z][0]);
+                    else
+                        rez.Last().Last().Add(avgColor(rezs[x][y][z], RoundColor));
                 }
             }
         }
@@ -182,7 +188,7 @@ public static class ModelConverter
         return f3;
     }
 
-    private static Color? avgColor(List<Color> clrs)
+    private static Color? avgColor(List<Color> clrs, byte RoundColor = 1)
     {
         if (clrs.Count == 0)
             return null;
@@ -196,7 +202,7 @@ public static class ModelConverter
             b += clr.B;
         }
 
-        return Color.FromRgb((byte)((r / clrs.Count)/50*50), (byte)((g / clrs.Count)/50*50), (byte)((b / clrs.Count)/50*50));
+        return Color.FromRgb((byte)((r / clrs.Count) / RoundColor * RoundColor), (byte)((g / clrs.Count) / RoundColor * RoundColor), (byte)((b / clrs.Count) / RoundColor * RoundColor));
     }
 
     public static List<(Point3DCollection, Int32Collection, Color)> VoxelToPolygon(List<List<List<Color?>>> vertex)
@@ -231,47 +237,47 @@ public static class ModelConverter
                     triangles[NNcolor].Add(vertexCount - 7 - 1);//0
                     triangles[NNcolor].Add(vertexCount - 5 - 1);//2
                     triangles[NNcolor].Add(vertexCount - 6 - 1);//1
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 4 - 1);//3
                     triangles[NNcolor].Add(vertexCount - 6 - 1);//1
                     triangles[NNcolor].Add(vertexCount - 5 - 1);//2
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 3 - 1);//4
                     triangles[NNcolor].Add(vertexCount - 1 - 1);//6
                     triangles[NNcolor].Add(vertexCount - 2 - 1);//5
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 1 - 1);//6
                     triangles[NNcolor].Add(vertexCount - 0 - 1);//7
                     triangles[NNcolor].Add(vertexCount - 2 - 1);//5
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 7 - 1);//0
                     triangles[NNcolor].Add(vertexCount - 6 - 1);//1
                     triangles[NNcolor].Add(vertexCount - 3 - 1);//4
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 2 - 1);//5
                     triangles[NNcolor].Add(vertexCount - 3 - 1);//4
                     triangles[NNcolor].Add(vertexCount - 6 - 1);//1
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 1 - 1);
                     triangles[NNcolor].Add(vertexCount - 5 - 1);
                     triangles[NNcolor].Add(vertexCount - 4 - 1);
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 1 - 1);
                     triangles[NNcolor].Add(vertexCount - 4 - 1);
                     triangles[NNcolor].Add(vertexCount - 0 - 1);
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 7 - 1);
                     triangles[NNcolor].Add(vertexCount - 5 - 1);
                     triangles[NNcolor].Add(vertexCount - 3 - 1);
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 1 - 1);
                     triangles[NNcolor].Add(vertexCount - 3 - 1);
                     triangles[NNcolor].Add(vertexCount - 5 - 1);
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 6 - 1);
                     triangles[NNcolor].Add(vertexCount - 4 - 1);
                     triangles[NNcolor].Add(vertexCount - 2 - 1);
-                                                   
+
                     triangles[NNcolor].Add(vertexCount - 0 - 1);
                     triangles[NNcolor].Add(vertexCount - 2 - 1);
                     triangles[NNcolor].Add(vertexCount - 4 - 1);

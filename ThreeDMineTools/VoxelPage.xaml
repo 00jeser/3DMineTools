@@ -18,11 +18,14 @@
     <StackPanel>
         <Button Click="OpenModel">open</Button>
         <Grid Width="0" Height="40"/>
+        <TextBlock Text="Color round"/>
+        <Slider Minimum="1" Maximum="255" Value="10" Interval="1" x:Name="ColorRoundValue"/>
         <TextBlock Text="Algorithm type"/>
         <ComboBox x:Name="AlghoType" SelectedIndex="2">
             <TextBlock Text="1"/>
             <TextBlock Text="2"/>
             <TextBlock Text="3"/>
+            <TextBlock Text="3(first)"/>
         </ComboBox>
         <Button Click="ConvertModel" x:Name="convertButton" IsEnabled="False">Convert</Button>
         <Grid Width="0" Height="40"/>
