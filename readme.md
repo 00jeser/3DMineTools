@@ -9,7 +9,7 @@
 
 # Скачать
 - [Установите .Net6+](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) (Перейдите по ссылке и скачайте последнюю версию .NET Runtime)
-- Установите последний релиз из списка [Список релизов](https://github.com/OOjeser/3DMineTools/releases)
+- Скачайте и раcпакуйте последний релиз программы из списка: [Список релизов](https://github.com/OOjeser/3DMineTools/releases)
 
 # Инструкция по применению
 ![tutoreal](ReadmeImages/tutor.png)
