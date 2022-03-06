@@ -78,48 +78,30 @@ public class BlockPicker
             {
                 string[] fields = parser.ReadFields();
                 var block = (byte.Parse(fields[0]), byte.Parse(fields[1]));
-                if(blocksFilter.Contains(block))
+                if (blocksFilter.Contains(block))
                     blocks[block] = (Color)ColorConverter.ConvertFromString("#FF" + fields[2]);
             }
         }
     }
 
-    public (byte, byte) GetBlockFroColor(Color color)
+    public (byte, byte) GetBlockByColor(Color color)
     {
         if (blocks.Count == 0)
             Init();
         (byte, byte) MinColor = (1, 0);
 
         var tmpColor = System.Drawing.Color.FromArgb(255, color.R, color.G, color.B);
-            float minDif = float.MaxValue;
-        (var h, var s, var v) = (tmpColor.GetHue(), tmpColor.GetSaturation(), tmpColor.GetBrightness());
-        if (s < 0.15 || v < 0.15)
+        float minDif = float.MaxValue;
+        var (h, s, v) = (tmpColor.GetHue(), tmpColor.GetSaturation(), tmpColor.GetBrightness());
+        foreach (var block in blocks.Keys)
         {
-            foreach (var block in blocks.Keys)
+            var tmpColor2 = System.Drawing.Color.FromArgb(255, blocks[block].R, blocks[block].G, blocks[block].B);
+            var (h2, s2, v2) = (tmpColor2.GetHue(), tmpColor2.GetSaturation(), tmpColor2.GetBrightness());
+            int dif = (int)Math.Sqrt(Math.Pow(blocks[block].R - color.R, 2) + Math.Pow(blocks[block].G - color.G, 2) + Math.Pow(blocks[block].B - color.B, 2) + Math.Pow(h - h2, 2));
+            if (dif < minDif)
             {
-                int dif = (int)Math.Sqrt(Math.Pow(blocks[block].R - color.R, 2) + Math.Pow(blocks[block].G - color.G, 2) + Math.Pow(blocks[block].B - color.B, 2));
-                if (dif < minDif)
-                {
-                    minDif = dif;
-                    MinColor = block;
-                }
-            }
-        }
-        else
-        {
-            foreach (var block in blocks.Keys)
-            {
-                var ctmpColor = System.Drawing.Color.FromArgb(255, blocks[block].R, blocks[block].G, blocks[block].B);
-                var ch = ctmpColor.GetHue();
-                var cs = ctmpColor.GetSaturation();
-                var cv = ctmpColor.GetBrightness();
-                if(MathF.Abs(cs - s) > 0.2 || MathF.Abs(cv - v) > 0.2)
-                    continue;
-                if (MathF.Abs(ch - h) < minDif)
-                {
-                    minDif = MathF.Abs(ch - h);
-                    MinColor = block;
-                }
+                minDif = dif;
+                MinColor = block;
             }
         }
 

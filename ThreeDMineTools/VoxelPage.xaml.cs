@@ -275,7 +275,7 @@ namespace ThreeDMineTools
                         }
                         else
                         {
-                            (byte, byte) r = blockPicker.GetBlockFroColor((Color)vertex[x][y][z]);
+                            (byte, byte) r = blockPicker.GetBlockByColor((Color)vertex[x][y][z]);
                             bytes.Add(r.Item1);
                             data.Add(r.Item2);
                         }
