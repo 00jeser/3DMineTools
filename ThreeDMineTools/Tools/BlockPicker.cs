@@ -53,7 +53,7 @@ public class BlockPicker
         using (TextFieldParser parser = new TextFieldParser(Assembly.GetExecutingAssembly().GetManifestResourceStream("ThreeDMineTools.Textures.blocks.csv")))
         {
             parser.TextFieldType = FieldType.Delimited;
-            parser.SetDelimiters(",");
+            parser.SetDelimiters(";");
             parser.ReadFields();
             while (!parser.EndOfData)
             {
@@ -72,7 +72,7 @@ public class BlockPicker
         using (TextFieldParser parser = new TextFieldParser(Assembly.GetExecutingAssembly().GetManifestResourceStream("ThreeDMineTools.Textures.blocks.csv")))
         {
             parser.TextFieldType = FieldType.Delimited;
-            parser.SetDelimiters(",");
+            parser.SetDelimiters(";");
             parser.ReadFields();
             while (!parser.EndOfData)
             {

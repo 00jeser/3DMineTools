@@ -32,9 +32,11 @@ namespace ThreeDMineTools
         }
 
         private List<Color> ColorsList = new();
+        private int n = 0;
         public ColorForBlockSelectorWindow(List<Color> colors)
         {
             ColorsList = colors;
+            n = colors.Count;
             InitializeComponent();
         }
 
@@ -42,6 +44,9 @@ namespace ThreeDMineTools
         {
             (sender as ListBox).ItemsSource = BlocksDatabase.Blocks.Keys;
             (sender as ListBox).SelectedIndex = 0;
+            n--;
+            if (n == 0)
+                LoadingIndicator.Visibility = Visibility.Hidden;
         }
 
         private void ChangeColor(object sender, SelectionChangedEventArgs e)

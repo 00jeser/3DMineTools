@@ -12,6 +12,7 @@
         <tools:BlockToNameConverter x:Key="blockNameCnv"/>
     </Window.Resources>
     <Grid>
+        <Label Content="Loading..." x:Name="LoadingIndicator"/>
         <ItemsControl x:Name="list" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

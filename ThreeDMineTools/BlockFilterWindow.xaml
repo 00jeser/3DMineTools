@@ -36,9 +36,12 @@
         </ListBox>
         <Grid Grid.Row="1">
             <WrapPanel Orientation="Horizontal">
-                <Button>Select all wool</Button>
-                <Button>Select all ceramic</Button>
-                <Button>Select all</Button>
+                <Button Click="selectAllWool">Select all wool</Button>
+                <Button Click="selectAllCeramic">Select all ceramic</Button>
+                <Button Click="selectAllConcrete">Select all concrete</Button>
+                <Button Click="selectAll">Select all</Button>
+                <Rectangle Width="50"/>
+                <Button Click="deselectAll">Deselect all</Button>
             </WrapPanel>
         </Grid>
         <Grid Grid.Row="2">
