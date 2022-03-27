@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -104,7 +106,6 @@ public static class ModelConverter
     }
     private static bool betwen(float first, float value, float second) => (first <= value && value <= second) || (first >= value && value >= second);
 
-
     public static List<List<List<Color?>>> PolygonToVoxel3(MModel model, bool firstColor, byte RoundColor = 1)
     {
         List<List<List<List<Color>>>> rezs = new((int)(model.XMax - model.XMin));
@@ -187,6 +188,62 @@ public static class ModelConverter
             return f2;
         return f3;
     }
+
+    public static List<List<List<Color?>>> PolygonToVoxel4(MModel model, byte RoundColor = 1)
+    {
+        var MaxProgress = ((int)model.XMax + 1) - ((int)model.XMin - 1);
+        var CurentProgress = 0d;
+        List<List<List<Color?>>> rez = new();
+        for (int x = (int)model.XMin - 1; x <= (int)model.XMax + 1; x++)
+        {
+            rez.Add(new List<List<Color?>>());
+            for (int y = (int)model.YMin - 1; y <= (int)model.YMax + 1; y++)
+            {
+                rez.Last().Add(new List<Color?>());
+                for (int z = (int)model.ZMin - 1; z <= (int)model.ZMax + 1; z++)
+                {
+                    Color? c = null;
+                    foreach (var poly in model.Polygons)
+                    {
+                        if (InsidePoly(poly.Point1, poly.Point2, poly.Point3, new MPoint(x, y, z)))
+                        {
+                            c = Color.FromRgb((byte)(poly.AverageColor.R / RoundColor * RoundColor), (byte)(poly.AverageColor.G / RoundColor * RoundColor), (byte)(poly.AverageColor.B / RoundColor * RoundColor));
+                            break;
+                        }
+                    }
+                    rez.Last().Last().Add(c);
+                }
+            }
+
+            CurentProgress++;
+            progress = CurentProgress / MaxProgress;
+        }
+
+        return rez;
+    }
+
+    //https://habr.com/ru/post/204806/
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool InsidePoly(MPoint A, MPoint B, MPoint C, MPoint P)
+    {
+        float AB = MathF.Sqrt((A.X - B.X) * (A.X - B.X) + (A.Y - B.Y) * (A.Y - B.Y) + (A.Z - B.Z) * (A.Z - B.Z));
+        float BC = MathF.Sqrt((B.X - C.X) * (B.X - C.X) + (B.Y - C.Y) * (B.Y - C.Y) + (B.Z - C.Z) * (B.Z - C.Z));
+        float CA = MathF.Sqrt((A.X - C.X) * (A.X - C.X) + (A.Y - C.Y) * (A.Y - C.Y) + (A.Z - C.Z) * (A.Z - C.Z));
+
+        float AP = MathF.Sqrt((P.X - A.X) * (P.X - A.X) + (P.Y - A.Y) * (P.Y - A.Y) + (P.Z - A.Z) * (P.Z - A.Z));
+        float BP = MathF.Sqrt((P.X - B.X) * (P.X - B.X) + (P.Y - B.Y) * (P.Y - B.Y) + (P.Z - B.Z) * (P.Z - B.Z));
+        float CP = MathF.Sqrt((P.X - C.X) * (P.X - C.X) + (P.Y - C.Y) * (P.Y - C.Y) + (P.Z - C.Z) * (P.Z - C.Z));
+        float diff = (triangle_square(AP, BP, AB) + triangle_square(AP, CP, CA) + triangle_square(BP, CP, BC)) - triangle_square(AB, BC, CA);
+        if (MathF.Abs(diff) < 1e-1) return true;
+        return false;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static float triangle_square(float a, float b, float c)
+    {
+        float p = (a + b + c) / 2;
+        return MathF.Sqrt(p * (p - a) * (p - b) * (p - c));
+    }
+
 
     private static Color? avgColor(List<Color> clrs, byte RoundColor = 1)
     {

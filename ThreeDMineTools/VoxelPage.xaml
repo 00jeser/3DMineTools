@@ -26,6 +26,7 @@
             <TextBlock Text="2"/>
             <TextBlock Text="3"/>
             <TextBlock Text="3(first)"/>
+            <TextBlock Text="4"/>
         </ComboBox>
         <Button Click="ConvertModel" x:Name="convertButton" IsEnabled="False">Convert</Button>
         <Grid Width="0" Height="40"/>

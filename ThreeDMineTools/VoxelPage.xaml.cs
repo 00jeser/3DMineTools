@@ -340,7 +340,8 @@ namespace ThreeDMineTools
                 0 => () => vertex = ModelConverter.PolygonToVoxel(newModel, round),
                 1 => () => vertex = ModelConverter.PolygonToVoxel2(newModel, round),
                 2 => () => vertex = ModelConverter.PolygonToVoxel3(newModel, false, round),
-                3 => () => vertex = ModelConverter.PolygonToVoxel3(newModel, true, round)
+                3 => () => vertex = ModelConverter.PolygonToVoxel3(newModel, true, round),
+                4 => () => vertex = ModelConverter.PolygonToVoxel4(newModel, round)
             }
             );
             t.Start();
