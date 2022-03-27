@@ -37,7 +37,7 @@
 
   <ItemGroup>
     <Reference Include="Substrate">
-      <HintPath>C:\Users\00jes\source\repos\Substrate\Substrate\bin\Debug\net6.0\Substrate.dll</HintPath>
+      <HintPath>..\Substrate.dll</HintPath>
     </Reference>
   </ItemGroup>
 
