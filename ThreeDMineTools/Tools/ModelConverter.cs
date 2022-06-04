@@ -99,19 +99,19 @@ public static class ModelConverter
 
     public static List<List<List<Color?>>> PolygonToVoxel3(MModel model, bool firstColor, byte RoundColor = 1)
     {
-        List<List<List<List<Color>>>> rezs = new((int)(model.XMax - model.XMin));
+        List<List<List<List<int>>>> rezs = new((int)(model.XMax - model.XMin));
         var dX = (int)model.XMin - 1;
         var dY = (int)model.YMin - 1;
         var dZ = (int)model.ZMin - 1;
         for (int x = (int)model.XMin - 1; x <= (int)model.XMax + 1; x++)
         {
-            rezs.Add(new List<List<List<Color>>>((int)(model.YMax - model.YMin)));
+            rezs.Add(new List<List<List<int>>>((int)(model.YMax - model.YMin)));
             for (int y = (int)model.YMin - 1; y <= (int)model.YMax + 1; y++)
             {
-                rezs.Last().Add(new List<List<Color>>((int)(model.ZMax - model.ZMin)));
+                rezs.Last().Add(new List<List<int>>((int)(model.ZMax - model.ZMin)));
                 for (int z = (int)model.ZMin - 1; z <= (int)model.ZMax + 1; z++)
                 {
-                    rezs.Last().Last().Add(new List<Color>(5));
+                    rezs.Last().Last().Add(new List<int>(5));
                 }
             }
 
@@ -133,7 +133,8 @@ public static class ModelConverter
 
                     for (int z = (int)min(poly.Point1.Z, poly.Point2.Z, poly.Point3.Z); z <= zmax; z++)
                     {
-                        rezs[x - dX][y - dY][z - dZ].Add(poly.AverageColor);
+                        var dfwajikdwsajik = poly.AverageColor.ToSimpleColor();
+                        rezs[x - dX][y - dY][z - dZ].Add(dfwajikdwsajik);
                     }
                 }
             }
@@ -154,7 +155,7 @@ public static class ModelConverter
                         if (rezs[x][y][z].Count == 0)
                             rez.Last().Last().Add(null);
                         else
-                            rez.Last().Last().Add(rezs[x][y][z][0]);
+                            rez.Last().Last().Add(rezs[x][y][z][0].ToColor());
                     else
                         rez.Last().Last().Add(avgColor(rezs[x][y][z], RoundColor));
                 }
@@ -163,6 +164,23 @@ public static class ModelConverter
 
         return rez;
     }
+
+    public static int ToSimpleColor(this Color c)
+    {
+        return (c.A << (8 * 3)) + (c.R << (8 * 2)) + (c.G << (8 * 1)) + (c.B << (8 * 0));
+    }
+
+    public static Color ToColor(this int i)
+    {
+        return new Color()
+        {
+            A = (byte)((i >> 24) & 0b11111111),
+            R = (byte)((i >> 16) & 0b11111111),
+            G = (byte)((i >> 8)  & 0b11111111),
+            B = (byte)((i >> 0)  & 0b11111111),
+        };
+    }
+
     private static float max(float f1, float f2, float f3)
     {
         if (f1 > f2 && f1 > f3)
@@ -236,21 +254,21 @@ public static class ModelConverter
     }
 
 
-    private static Color? avgColor(List<Color> clrs, byte RoundColor = 1)
+    private static Color? avgColor(IEnumerable<int> clrs, byte RoundColor = 1)
     {
-        if (clrs.Count == 0)
+        if (clrs.Count() == 0)
             return null;
         int r = 0;
         int g = 0;
         int b = 0;
         foreach (var clr in clrs)
         {
-            r += clr.R;
-            g += clr.G;
-            b += clr.B;
+            r += (clr >> 16)  & 0b11111111;
+            g += (clr >> 8) & 0b11111111;
+            b += (clr >> 0) & 0b11111111;
         }
 
-        return Color.FromRgb((byte)((r / clrs.Count) / RoundColor * RoundColor), (byte)((g / clrs.Count) / RoundColor * RoundColor), (byte)((b / clrs.Count) / RoundColor * RoundColor));
+        return Color.FromRgb((byte)((r / clrs.Count()) / RoundColor * RoundColor), (byte)((g / clrs.Count()) / RoundColor * RoundColor), (byte)((b / clrs.Count()) / RoundColor * RoundColor));
     }
 
     public static List<(Point3DCollection, Int32Collection, Color)> VoxelToPolygon(List<List<List<Color?>>> vertex)
