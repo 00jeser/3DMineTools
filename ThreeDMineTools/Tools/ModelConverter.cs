@@ -52,10 +52,8 @@ public static class ModelConverter
 
     public static List<List<List<Color?>>> PolygonToVoxel2(MModel model, byte RoundColor = 1)
     {
+        var MaxProgress = model.Polygons.Length;
         List<List<List<Color?>>> rez = new();
-        var dX = (int)model.XMin - 1;
-        var dY = (int)model.YMin - 1;
-        var dZ = (int)model.ZMin - 1;
         for (int x = (int)model.XMin - 1; x <= (int)model.XMax + 1; x++)
         {
             rez.Add(new List<List<Color?>>());
@@ -68,40 +66,33 @@ public static class ModelConverter
                 }
             }
         }
-        for (int z = (int)model.ZMin; z < model.ZMax + 1; z++)
+        var dX = (int)model.XMin - 1;
+        var dY = (int)model.YMin - 1;
+        var dZ = (int)model.ZMin - 1;
+        int n = 0;
+        foreach (var poly in model.Polygons)
         {
-            foreach (var polyz in model.Polygons)
+            var xmax = (int)max(poly.Point1.X, poly.Point2.X, poly.Point3.X);
+            var ymax = (int)max(poly.Point1.Y, poly.Point2.Y, poly.Point3.Y);
+            var zmax = (int)max(poly.Point1.Z, poly.Point2.Z, poly.Point3.Z);
+            for (int x = (int)min(poly.Point1.X, poly.Point2.X, poly.Point3.X) - 1; x <= xmax + 1; x++)
             {
-                if (betwen(polyz.Point1.Z, z, polyz.Point2.Z) ||
-                    betwen(polyz.Point1.Z, z, polyz.Point3.Z) ||
-                    betwen(polyz.Point3.Z, z, polyz.Point2.Z))
+                for (int y = (int)min(poly.Point1.Y, poly.Point2.Y, poly.Point3.Y) - 1; y <= ymax + 1; y++)
                 {
-                    for (int y = (int)model.YMin - 1; y <= (int)model.YMax + 1; y++)
+                    for (int z = (int)min(poly.Point1.Z, poly.Point2.Z, poly.Point3.Z) - 1; z <= zmax + 1; z++)
                     {
-                        if (betwen(polyz.Point1.Y, y, polyz.Point2.Y) ||
-                            betwen(polyz.Point1.Y, y, polyz.Point3.Y) ||
-                            betwen(polyz.Point3.Y, y, polyz.Point2.Y))
+                        if (Intersection(new MPoint(x, y, z), poly.Point2, poly.Point1, poly.Point3) == 1)
                         {
-                            for (int x = (int)model.XMin - 1; x <= (int)model.XMax + 1; x++)
-                            {
-                                if (betwen(polyz.Point1.X, x, polyz.Point2.X) ||
-                                    betwen(polyz.Point1.X, x, polyz.Point3.X) ||
-                                    betwen(polyz.Point3.X, x, polyz.Point2.X))
-                                {
-                                    rez[x - dX][y - dY][z - dZ] = Color.FromRgb((byte)(polyz.AverageColor.R / RoundColor * RoundColor), (byte)(polyz.AverageColor.G / RoundColor * RoundColor), (byte)(polyz.AverageColor.B / RoundColor * RoundColor));
-                                }
-                            }
+                            rez[x - dX][y - dY][z - dZ] = poly.AverageColor;
                         }
                     }
                 }
             }
+
+            progress = n / model.Polygons.Length;
+            n++;
         }
-        foreach (var poly in model.Polygons)
-        {
-            rez[(int)poly.Point1.X - dX][(int)poly.Point1.Y - dY][(int)poly.Point1.Z - dZ] = poly.AverageColor;
-            rez[(int)poly.Point2.X - dX][(int)poly.Point2.Y - dY][(int)poly.Point2.Z - dZ] = poly.AverageColor;
-            rez[(int)poly.Point3.X - dX][(int)poly.Point3.Y - dY][(int)poly.Point3.Z - dZ] = poly.AverageColor;
-        }
+
         return rez;
     }
     private static bool betwen(float first, float value, float second) => (first <= value && value <= second) || (first >= value && value >= second);
