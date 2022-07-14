@@ -99,7 +99,7 @@ public static class ModelConverter
 
     public static List<List<List<Color?>>> PolygonToVoxel3(MModel model, bool firstColor, byte RoundColor = 1)
     {
-        List<List<List<List<int>>>> rezs = new((int)(model.XMax - model.XMin));
+        List<List<List<List<int>>>> rezs = new();
         var dX = (int)model.XMin - 1;
         var dY = (int)model.YMin - 1;
         var dZ = (int)model.ZMin - 1;
@@ -165,11 +165,13 @@ public static class ModelConverter
         return rez;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToSimpleColor(this Color c)
     {
         return (c.A << (8 * 3)) + (c.R << (8 * 2)) + (c.G << (8 * 1)) + (c.B << (8 * 0));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color ToColor(this int i)
     {
         return new Color()
@@ -243,7 +245,7 @@ public static class ModelConverter
         float BP = MathF.Sqrt((P.X - B.X) * (P.X - B.X) + (P.Y - B.Y) * (P.Y - B.Y) + (P.Z - B.Z) * (P.Z - B.Z));
         float CP = MathF.Sqrt((P.X - C.X) * (P.X - C.X) + (P.Y - C.Y) * (P.Y - C.Y) + (P.Z - C.Z) * (P.Z - C.Z));
         float diff = (triangle_square(AP, BP, AB) + triangle_square(AP, CP, CA) + triangle_square(BP, CP, BC)) - triangle_square(AB, BC, CA);
-        if (MathF.Abs(diff) < 1e-1) return true;
+        if (MathF.Abs(diff) < 0.85) return true;
         return false;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -5,12 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ThreeDMineTools"
         xmlns:tools="clr-namespace:ThreeDMineTools.Tools"
+        xmlns:components="clr-namespace:ThreeDMineTools.Components"
         mc:Ignorable="d"
         Title="ColorForBlockSelectorWindow" Height="450" Width="800" Initialized="Window_OnInitialized">
     <Window.Resources>
         <local:BlockToImageConverter x:Key="blockImageCnv"/>
         <tools:BlockToNameConverter x:Key="blockNameCnv"/>
     </Window.Resources>
+    <ScrollViewer>
     <Grid>
         <Label Content="Loading..." x:Name="LoadingIndicator"/>
         <ItemsControl x:Name="list" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
@@ -35,11 +37,7 @@
                             </ListBox.ItemsPanel>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding}"/>
-                                        <Image Height="32" Width="32" Source="{Binding Converter={StaticResource blockImageCnv}}"/>
-                                        <TextBlock Text="{Binding Converter={StaticResource blockNameCnv}}"/>
-                                    </StackPanel>
+                                    <components:BlockTexture MainByte="{Binding}"/>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -47,5 +45,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </Window>

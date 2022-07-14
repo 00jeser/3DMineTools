@@ -304,12 +304,12 @@ namespace ThreeDMineTools
 
         private async void ConvertModel(object sender, RoutedEventArgs e)
         {
-            XMax = float.MinValue;
-            YMax = float.MinValue;
-            ZMax = float.MinValue;
-            XMin = float.MaxValue;
-            YMin = float.MaxValue;
-            ZMin = float.MaxValue;
+            //XMax = float.MinValue;
+            //YMax = float.MinValue;
+            //ZMax = float.MinValue;
+            //XMin = float.MaxValue;
+            //YMin = float.MaxValue;
+            //ZMin = float.MaxValue;
             MModel newModel = new();
             newModel.YMin = model.YMin * (float)scale.Value;
             newModel.XMin = model.XMin * (float)scale.Value;
@@ -414,7 +414,9 @@ namespace ThreeDMineTools
 
         private void scaleChange(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            heightTB.Text = ((YMax - YMin) * scale.Value).ToString();
+            var a = (YMax - YMin);
+            var b = a * scale.Value;
+            heightTB.Text = (b).ToString();
         }
 
 

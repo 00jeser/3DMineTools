@@ -46,7 +46,9 @@ namespace ThreeDMineTools
             (sender as ListBox).SelectedIndex = 0;
             n--;
             if (n == 0)
+            {
                 LoadingIndicator.Visibility = Visibility.Hidden;
+            }
         }
 
         private void ChangeColor(object sender, SelectionChangedEventArgs e)

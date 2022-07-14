@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ThreeDMineTools"
         xmlns:tools="clr-namespace:ThreeDMineTools.Tools"
+        xmlns:components="clr-namespace:ThreeDMineTools.Components"
         mc:Ignorable="d"
         Title="BlockFilterWindow" Height="450" Width="800"
         Loaded="Window_OnLoaded">
@@ -26,11 +27,7 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel>
-                        <TextBlock Text="{Binding}"/>
-                        <Image Height="32" Width="32" Source="{Binding Converter={StaticResource blockImageCnv}}"/>
-                        <TextBlock Text="{Binding Converter={StaticResource blockNameCnv}}"/>
-                    </StackPanel>
+                    <components:BlockTexture MainByte="{Binding}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
